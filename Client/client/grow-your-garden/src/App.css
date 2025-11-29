@@ -40,3 +40,21 @@
 .read-the-docs {
   color: #888;
 }
+
+/*ASSIGNMENT CODE BEGINS HERE*/
+
+/*navigation bar. content positioned relative to the parent.
+Bar itself at the top of the page. Contain logo, login/out, profile*/
+.navBar {
+  background-color: antiquewhite;
+  top: 0;
+}
+
+/*create logo class, using background image to display the logo in 
+React. change the sizing as needed where it appears in the website.
+for now, using 75px by 75px as the baseline*/
+.logo {
+  width: 75px;
+  height: 75px;
+  background-image: url(./assets/tempLogoGYG.png);
+}
