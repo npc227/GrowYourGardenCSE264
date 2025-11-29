@@ -12,6 +12,40 @@ Returns all users in the database, except users whose IDs are negative (test and
 ### /users/:id
 Returns the user with the id given, or an error
 
+## POST ROUTES
+### /users
+Adds a user to the database and returns the new user id
+*EXAMPLE JSON:*
+`{
+    "username":"creative_username",
+    "first_name":"firstname", 
+    "last_name":"lastname",
+    "email":"something@gmail.com", //MUST BE UNIQUE
+    "role":0, //MUST BE -1, 0, 1 OR 2
+    "display_name":"optionally something different",
+    "biography":"optional biography",
+    "reports":0 //I would recommend not setting this since it is how many reports a user has recieved
+}`
+
+## PUT ROUTES
+### /users/:id
+Updates a user in the database. **NOTE THAT YOU MUST HAVE ALL FIELDS PRESENT FOR THIS TO WORK CORRECTLY!**
+*Example JSON*
+`{
+    "username":"nomcrnative_username",
+    "first_name":"dumb_firstname",
+    "last_name":"dumb_lastname",
+    "email":"something@new.com",
+    "role":0,
+    "display_name":"optionally something different",
+    "biography":"optional biography",
+    "reports":0
+`}
+
+## DELETE ROUTES
+### /users/:id
+Deletes a user in the database.
+
 
 
 

@@ -58,10 +58,14 @@ app.post('/users', (req, res) => {
     const first_name = body["first_name"] || null
     const last_name = body["last_name"] || null
     const email = body["email"] || null
-    const role = body["role"] || null
+    const role = body["role"] || 0
     const biography = body["biography"] || null
     const reports = body["reports"] || 0
     const display_name = body["display_name"] || first_name + ' ' + last_name || null
+
+    if (role > 2) {
+        res.status(400).json("Invalid role given.")
+    }
 
     const params = [username, first_name, last_name, email, role, biography, reports, display_name]
 
@@ -70,7 +74,7 @@ app.post('/users', (req, res) => {
                 values ($1, $2, $3, $4, $5, $6, $7, $8)`
 
     try {
-        query(qs, params).then(data => {res.json(`Created user with id:${data.rows[0]["id"]}`)})
+        query(qs, params).then(data => {res.json(`Number of users created:${data.rowCount}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -78,7 +82,47 @@ app.post('/users', (req, res) => {
 
 /** PUT ROUTES */
 
+// update a user
+app.put('/users/:id', (req, res) => {
+    const body = req.body
+    const id = req.params.id
+
+    const username = body["username"] || null
+    const first_name = body["first_name"] || null
+    const last_name = body["last_name"] || null
+    const email = body["email"] || null
+    const role = body["role"] || 0
+    const biography = body["biography"] || null
+    const reports = body["reports"] || 0
+    const display_name = body["display_name"] || first_name + ' ' + last_name || null
+
+    if (role > 2) {
+        res.status(400).json("Invalid role given.")
+    }
+
+    const params = [username, first_name, last_name, email, role, biography, reports, display_name, id]
+
+    const qs = `UPDATE Users set username=$1, first_name = $2, last_name=$3, email=$4, role=$5, biography=$6, reports=$7, display_name=$8 WHERE id=$9`
+
+    try {
+        query(qs, params).then(data => {res.json(`Number of users updated:${data.rowCount}`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
 /** DELETE ROUTES */
+app.delete('/users/:id', (req, res) => {
+    const id = req.params.id
+    
+    const qs = `DELETE from Users where id=$1`
+    const params = [id]
+    try {
+        query(qs, params).then(data => {res.json(`Number of users deleted:${data.rowCount}`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
 
 /** LIKES + DISLIKES ROUTES */
 
