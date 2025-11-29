@@ -4,7 +4,15 @@ This is the backend server which transforms the Supabase database into an API. I
 or
 `npm run` for the stable build
 
-## Routes
+# Routes
+## GET ROUTES
+### /users
+Returns all users in the database, except users whose IDs are negative (test and admin accounts)
+
+### /users/:id
+Returns the user with the id given, or an error
+
+
 
 
 ## Tables
