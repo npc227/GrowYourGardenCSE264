@@ -37,6 +37,23 @@ app.get('/users', (req, res) => {
     }
 })
 
+// get user with a specific username (with wildcard)
+// example call: query?username=Bill
+// Would find billy, billon, billtoven etc.
+app.get('/users/query', (req, res) => {
+    const target = req.query.username + "%" || '%'
+    
+
+    const qs = `SELECT * FROM Users WHERE username LIKE $1 AND id>0`
+    const params = [target]
+
+    try {
+        query(qs, params).then(data => {res.json(data.rows)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
 // get user with specified id (including test and admin accounts if requested)
 app.get('/users/:id', (req, res) => {
     const qs = `SELECT * FROM Users WHERE id=$1`
@@ -47,6 +64,7 @@ app.get('/users/:id', (req, res) => {
         res.status(400).json(error.message)
     }
 })
+
 
 // get all posts
 app.get('/posts', (_req, res) => {

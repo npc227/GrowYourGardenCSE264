@@ -17,6 +17,9 @@ Returns all users in the database, except users whose IDs are negative (test and
 ### /users/:id
 Returns the user with the id given, or an error
 
+### /users/query?username=[name]
+Finds all users with a username that starts with the value written in "name"
+
 ### /posts
 Returns all posts
 
