@@ -31,7 +31,7 @@ Returns the 'num' most liked posts
 
 ## POST ROUTES
 ### /users
-Adds a user to the database and returns the new user id
+Adds a user to the database and returns the number of users created
 *EXAMPLE JSON:*
 `{
     "username":"creative_username",
@@ -42,6 +42,15 @@ Adds a user to the database and returns the new user id
     "display_name":"optionally something different",
     "biography":"optional biography",
     "reports":0 //I would recommend not setting this since it is how many reports a user has recieved
+}`
+
+### /posts
+Adds a post to the database. Only works if a valid user id is given
+*EXAMPLE JSON*
+`{
+    "user_id":-1, 
+    "title":"A cool post made by an admin",
+    "text_content":"Some cool text content"
 }`
 
 ## PUT ROUTES
