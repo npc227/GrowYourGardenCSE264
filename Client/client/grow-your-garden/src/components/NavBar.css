@@ -1,0 +1,25 @@
+/*NavBar styling*/
+
+/*NavBar container. describes color and
+alignment for items within.*/
+.nav {
+    background-color: blanchedalmond;
+    color: rgb(61, 32, 14);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100vw;
+    height: 100px;
+    margin-top: 0;
+    padding: 0;
+}
+
+/*logo - will replace with img*/
+.logo {
+    margin-left: 5%;
+}
+
+/*temp placeholder - will likely add modals for login/profile display*/
+.links {
+    margin-right: 5%;
+}
