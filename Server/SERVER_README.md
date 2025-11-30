@@ -121,6 +121,20 @@ Deletes a comment in the database.
 ### /posts/:post_id/comments/:comment_id
 Deletes a comment in the database with post_id and comment_id
 
+## LIKE AND DISLIKE ROUTES
+THESE ARE ALL 'PUT' ROUTES
+### /posts/:post_id/like
+Attempts to like a post. If user has already liked post, removes the like. If user has disliked post, removes dislike and adds a like. If user has not interacted with the post before, adds a like. Requires user id to be handed over via json body.
+*EXAMPLE JSON BODY:*
+`{
+    "user_id":-1
+}`
+
+### /posts/:post_id/dislike
+Attempts to dislike post. Has same logic as above. Also requires a json body as shown above.
+
+### /posts/:post_id/comment/:comment_id/like || dislike
+Functions same as above, but for comments!
 
 
 

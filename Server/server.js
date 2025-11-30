@@ -330,7 +330,208 @@ app.delete('/posts/:post_id/comments/:comment_id', (req, res) => {
 
 /** LIKES + DISLIKES ROUTES */
 
+// user attempts to like a post
+/**
+ * BEHAVIOR:
+ * User has not liked nor disliked post previously, clicks button -> adds user like
+ * User has liked post previously, clicks button again -> removes user like
+ * User has disliked post previously, clicks like button -> removes user dislike, adds user like
+ */
+app.put('/posts/:post_id/like', async (req, res) => {
+    const body = req.body
+
+    const user_id = body["user_id"]
+    const post_id = req.params.post_id;
+
+    const initial_query = `SELECT * FROM post_likes WHERE user_id=$1 AND post_id=$2`
+    const initial_params = [user_id, post_id]
+
+    try {
+        const priorLike = (await query(initial_query, initial_params)).rows[0]
+        const params = [user_id, post_id]
+
+        if (priorLike) { //If the like already exists, see whether it is positive or negative, and act accordingly
+
+            if (priorLike["value"] == 1) { //user liked post previously, removing like
+                const del_query = `DELETE FROM post_likes WHERE user_id=$1 AND post_id=$2`
+                await addLikesOnPost(post_id,-1)
+                await query(del_query, params)
+                res.json({"like_status": 0, "dislike_status":0})
+            } else { //user disliked post previously, remove dislike and add like
+                const upd_query = `UPDATE post_likes SET value=1 WHERE user_id=$1 AND post_id=$2`
+                await addLikesOnPost(post_id, 2) //total difference in score is 2
+                await query(upd_query, params)
+                res.json({"like_status": 1, "dislike_status":0})
+            }
+            
+        } else { //user has not interacted with post yet, so we can just add a dislike
+            const add_query = `INSERT INTO post_likes (user_id, post_id, value) VALUES ($1, $2, 1)`
+            await addLikesOnPost(post_id, 1)
+            await query(add_query, params)
+            res.json({"like_status": 1, "dislike_status":0})
+        }
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// user attempts to dislike a post
+/**
+ * BEHAVIOR:
+ * User has not liked nor disliked post previously, clicks button -> adds user dislike
+ * User has disliked post previously, clicks button again -> removes user dislike
+ * User has disliked post previously, clicks like button -> removes user dislike, adds user like
+ */
+app.put('/posts/:post_id/dislike', async (req, res) => {
+    const body = req.body
+
+    const user_id = body["user_id"]
+    const post_id = req.params.post_id;
+
+    const initial_query = `SELECT * FROM post_likes WHERE user_id=$1 AND post_id=$2`
+    const initial_params = [user_id, post_id]
+
+    try {
+        const priorLike = (await query(initial_query, initial_params)).rows[0]
+        const params = [user_id, post_id]
+
+        if (priorLike) { //If the like already exists, see whether it is positive or negative, and act accordingly
+
+            if (priorLike["value"] == -1) { //user disliked post previously, removing dislike
+                const del_query = `DELETE FROM post_likes WHERE user_id=$1 AND post_id=$2`
+                await addLikesOnPost(post_id,1)
+                await query(del_query, params)
+                res.json({"like_status": 0, "dislike_status":0})
+            } else { //user liked post previously, remove like and add dislike
+                const upd_query = `UPDATE post_likes SET value = -1 WHERE user_id=$1 AND post_id=$2`
+                await addLikesOnPost(post_id, -2) //total difference in score is -2
+                await query(upd_query, params)
+                res.json({"like_status": 0, "dislike_status": -1})
+            }
+            
+        } else { //user has not interacted with post yet, so we can just add a dislike
+            const add_query = `INSERT INTO post_likes (user_id, post_id, value) VALUES ($1, $2, -1)`
+            await addLikesOnPost(post_id, -1)
+            await query(add_query, params)
+            res.json({"like_status": 0, "dislike_status": -1})
+        }
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// user attempts to like a comment
+/**
+ * BEHAVIOR:
+ * User has not liked nor disliked comment previously, clicks button -> adds user like
+ * User has liked comment previously, clicks button again -> removes user like
+ * User has disliked comment previously, clicks like button -> removes user dislike, adds user like
+ */
+app.put('/posts/:post_id/comments/:comment_id/like', async (req, res) => {
+    const body = req.body
+
+    const user_id = body["user_id"]
+    const post_id = req.params.post_id;
+    const comment_id = req.params.comment_id;
+
+    const initial_query = `SELECT * FROM comment_likes WHERE user_id=$1 AND comment_id=$2`
+    const initial_params = [user_id, comment_id]
+
+    try {
+        const priorLike = (await query(initial_query, initial_params)).rows[0]
+        const params = [user_id, comment_id]
+
+        if (priorLike) { //If the like already exists, see whether it is positive or negative, and act accordingly
+
+            if (priorLike["value"] == 1) { //user liked post previously, removing like
+                const del_query = `DELETE FROM comment_likes WHERE user_id=$1 AND comment_id=$2`
+                await addLikesOnComment(comment_id,-1)
+                await query(del_query, params)
+                res.json({"like_status": 0, "dislike_status":0})
+            } else { //user disliked post previously, remove dislike and add like
+                const upd_query = `UPDATE comment_likes SET value=1 WHERE user_id=$1 AND comment_id=$2`
+                await addLikesOnComment(comment_id, 2) //total difference in score is 2
+                await query(upd_query, params)
+                res.json({"like_status": 1, "dislike_status":0})
+            }
+            
+        } else { //user has not interacted with post yet, so we can just add a dislike
+            const add_query = `INSERT INTO comment_likes (user_id, comment_id, value) VALUES ($1, $2, 1)`
+            await addLikesOnComment(comment_id, 1)
+            await query(add_query, params)
+            res.json({"like_status": 1, "dislike_status":0})
+        }
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// user attempts to dislike a comment
+/**
+ * BEHAVIOR:
+ * User has not liked nor disliked comment previously, clicks button -> adds user dislike
+ * User has disliked comment previously, clicks button again -> removes user dislike
+ * User has liked comment previously, clicks like button -> removes user like, adds user dislike
+ */
+app.put('/posts/:post_id/comments/:comment_id/dislike', async (req, res) => {
+    const body = req.body
+
+    const user_id = body["user_id"]
+    const post_id = req.params.post_id;
+    const comment_id = req.params.comment_id;
+
+    const initial_query = `SELECT * FROM comment_likes WHERE user_id=$1 AND comment_id=$2`
+    const initial_params = [user_id, comment_id]
+
+    try {
+        const priorLike = (await query(initial_query, initial_params)).rows[0]
+        const params = [user_id, comment_id]
+
+        if (priorLike) { //If the like already exists, see whether it is positive or negative, and act accordingly
+
+            if (priorLike["value"] == -1) { //user disliked post previously, removing dislike
+                const del_query = `DELETE FROM comment_likes WHERE user_id=$1 AND comment_id=$2`
+                await addLikesOnComment(comment_id, 1)
+                await query(del_query, params)
+                res.json({"like_status": 0, "dislike_status":0})
+            } else { //user disliked post previously, remove dislike and add like
+                const upd_query = `UPDATE comment_likes SET value=1 WHERE user_id=$1 AND comment_id=$2`
+                await addLikesOnComment(comment_id, -2) //total difference in score is -2
+                await query(upd_query, params)
+                res.json({"like_status": 0, "dislike_status":1})
+            }
+            
+        } else { //user has not interacted with post yet, so we can just add a dislike
+            const add_query = `INSERT INTO comment_likes (user_id, comment_id, value) VALUES ($1, $2, -1)`
+            await addLikesOnComment(comment_id, -1)
+            await query(add_query, params)
+            res.json({"like_status": 0, "dislike_status":1})
+        }
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+
 app.listen(app.get('port'), () => {
     console.log(`app is running at http://localhost:${DB_PORT}`)
     console.log("Press CTRL+C to stop\n")
 })
+
+/** Helper function to adjust the number of total likes and dislikes (as a score) a post has */
+async function addLikesOnPost(post_id, num) {
+    const qs = `UPDATE posts SET likes = likes + ${num} WHERE id=$1`
+    const params = [post_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to adjust the number of total likes and dislikes (as a score) a comment has */
+async function addLikesOnComment(comment_id, num) {
+    const qs = `UPDATE comments SET likes = likes + ${num} WHERE id=$1`
+    const params = [comment_id]
+
+    await query(qs, params)
+    return
+}
