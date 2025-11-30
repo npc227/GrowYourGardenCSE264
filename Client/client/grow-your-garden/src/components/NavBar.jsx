@@ -1,4 +1,7 @@
 import React from 'react'
+
+//styling: navbar styling and logo image
+import logoImg from '../assets/gyglogo.png'
 import './NavBar.css'
 
 //navbar component!
@@ -10,9 +13,7 @@ const NavBar = () => {
       <nav class={'nav'}>
 
         {/*logo*/}
-        <h1 class={'logo'}>
-            LOGO
-        </h1>
+        <img src={logoImg} class={'logo'}></img>
 
         {/*temp placeholders -- replace with modals for login/profile*/}
         <div class={'links'}>
