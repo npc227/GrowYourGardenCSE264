@@ -48,6 +48,42 @@ app.get('/users/:id', (req, res) => {
     }
 })
 
+// get all posts
+app.get('/posts', (_req, res) => {
+    const qs = `SELECT * FROM Posts`
+    try {
+        query(qs).then(data => {res.json(data.rows)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+//get top {num} recent posts
+app.get('/recent-posts/:num', (req, res) => {
+    const num = req.params.num
+
+    const params = [num]
+    const qs = `SELECT * FROM Posts ORDER BY created_at DESC LIMIT $1`
+    try {
+        query(qs, params).then(data => {res.json(data.rows)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+//get top {num} liked posts
+app.get('/hot-posts/:num', (req, res) => {
+    const num = req.params.num
+
+    const params = [num]
+    const qs = `SELECT * FROM Posts ORDER BY likes DESC LIMIT $1`
+    try {
+        query(qs, params).then(data => {res.json(data.rows)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
 /** POST ROUTES */
 
 // create a new user with desired fields, note that a user cannot be created with the same email as another user
@@ -74,7 +110,27 @@ app.post('/users', (req, res) => {
                 values ($1, $2, $3, $4, $5, $6, $7, $8)`
 
     try {
-        query(qs, params).then(data => {res.json(`Number of users created:${data.rowCount}`)})
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new users`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// create a new post with desired fields. Note that user ID must be a valid user
+app.post('/posts', (req, res) => {
+    const body = req.body
+
+    const user_id = body["user_id"] || null
+    const text_content = body["text_content"] || null
+    const title = body["title"] || null
+
+    const reports = 0; const likes = 0; //no likes or reports by default... obviously...
+
+    const params = [user_id, text_content, title, reports, likes]
+    const qs = `INSERT INTO Posts (user_id, text_content, title, reports, likes) VALUES ($1, $2, $3, $4, $5)`
+
+    try {
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -111,7 +167,27 @@ app.put('/users/:id', (req, res) => {
     }
 })
 
+// edit an existing post. Note that you can only change the title and text content through this method. Anything else requires admin console or alternative command
+app.put('/posts/:id', (req, res) => {
+    const body = req.body
+    const id = req.params.id
+
+    const text_content = body["text_content"] || null
+    const title = body["title"] || null
+
+    const params = [text_content, title, id]
+    const qs = `UPDATE Posts set text_content=$1, title=$2 WHERE id=$3`
+
+    try {
+        query(qs, params).then(data => {res.json(`Updated ${data.rowCount} posts`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
 /** DELETE ROUTES */
+
+// delete a user
 app.delete('/users/:id', (req, res) => {
     const id = req.params.id
     
@@ -119,6 +195,19 @@ app.delete('/users/:id', (req, res) => {
     const params = [id]
     try {
         query(qs, params).then(data => {res.json(`Number of users deleted:${data.rowCount}`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// delete a post
+app.delete('/posts/:id', (req, res) => {
+    const id = req.params.id
+    
+    const qs = `DELETE from Posts WHERE id=$1`
+    const params = [id]
+    try {
+        query(qs, params).then(data=>{res.json(`Number of posts deleted:${data.rowCount}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }

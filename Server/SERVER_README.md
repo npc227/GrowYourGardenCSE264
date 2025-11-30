@@ -4,6 +4,11 @@ This is the backend server which transforms the Supabase database into an API. I
 or
 `npm run` for the stable build
 
+# Important Note About Functionality
+Attachments (photos) are not given when searching by post. This is because they are in a separate table.
+That separate table has all attachments inside of it, and you can obtain all attachments for a certain post using a specific route.
+When you obtain attachments that way, they will be sorted by which one was created first. You may want to use this to your advantage somehow, not sure.
+
 # Routes
 ## GET ROUTES
 ### /users
@@ -11,6 +16,15 @@ Returns all users in the database, except users whose IDs are negative (test and
 
 ### /users/:id
 Returns the user with the id given, or an error
+
+### /posts
+Returns all posts
+
+### /recent-posts/:num
+Returns the 'num' most recent posts
+
+### /hot-posts/:num
+Returns the 'num' most liked posts
 
 ## POST ROUTES
 ### /users
@@ -40,11 +54,23 @@ Updates a user in the database. **NOTE THAT YOU MUST HAVE ALL FIELDS PRESENT FOR
     "display_name":"optionally something different",
     "biography":"optional biography",
     "reports":0
-`}
+}`
+
+### /posts/:id
+Updates a post in the database. **ONLY WORKS FOR TEXT CONTENT AND TITLE**
+*Example JSON*
+`{
+    "text_content":"example content",
+    "title":"example title"
+}`
+
 
 ## DELETE ROUTES
 ### /users/:id
-Deletes a user in the database.
+Deletes a user in the database. Know that this also deletes all posts, comments, attachments and reports the user makes.
+
+### /posts/:id
+Deletes a post in the database. Know that this also deletes all comments and attachments associated with that post.
 
 
 
