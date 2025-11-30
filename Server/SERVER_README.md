@@ -20,6 +20,9 @@ Returns the user with the id given, or an error
 ### /users/query?username=[name]
 Finds all users with a username that starts with the value written in "name"
 
+### /users/:user_id/posts
+Returns all posts a user has made
+
 ### /posts
 Returns all posts
 
@@ -29,9 +32,16 @@ Returns the 'num' most recent posts
 ### /hot-posts/:num
 Returns the 'num' most liked posts
 
+### /comments
+Returns all comments
+
+### /posts/:post_id/comments
+Returns all comments on the specified post
+
+
 ## POST ROUTES
 ### /users
-Adds a user to the database and returns the number of users created
+Adds a user to the database and returns the user created and a little message
 *EXAMPLE JSON:*
 `{
     "username":"creative_username",
@@ -44,6 +54,12 @@ Adds a user to the database and returns the number of users created
     "reports":0 //I would recommend not setting this since it is how many reports a user has recieved
 }`
 
+*EXAMPLE RESPONSE:*
+`{
+    "user_id": "6",
+    "body": "Created user with id: 6"
+}`
+
 ### /posts
 Adds a post to the database. Only works if a valid user id is given
 *EXAMPLE JSON*
@@ -51,6 +67,14 @@ Adds a post to the database. Only works if a valid user id is given
     "user_id":-1, 
     "title":"A cool post made by an admin",
     "text_content":"Some cool text content"
+}`
+
+### /posts/:post_id/comments
+Adds a comment to the database under the post with id = post_id. Both the user id given in the body and the post id given in the request must be valid.
+*EXAMPLE JSON*
+`{
+    "user_id":-1,
+    "text_content":"A cool comment made by an admin"
 }`
 
 ## PUT ROUTES
@@ -76,6 +100,13 @@ Updates a post in the database. **ONLY WORKS FOR TEXT CONTENT AND TITLE**
     "title":"example title"
 }`
 
+### /posts/:post_id/comments/comment_id
+Updates a comment in the database **ONLY WORKS FOR TEXT CONTENT**
+*Example JSON*
+`{
+    "text_content":"example content"
+}`
+
 
 ## DELETE ROUTES
 ### /users/:id
@@ -83,6 +114,12 @@ Deletes a user in the database. Know that this also deletes all posts, comments,
 
 ### /posts/:id
 Deletes a post in the database. Know that this also deletes all comments and attachments associated with that post.
+
+### /comments/:id
+Deletes a comment in the database.
+
+### /posts/:post_id/comments/:comment_id
+Deletes a comment in the database with post_id and comment_id
 
 
 
@@ -103,9 +140,9 @@ title, text_content,
 likes,
 reports (# of times post has been reported)
 
-### Likes
+### Comment and Post Likes (two separate tables)
 Fields:
-id, user_id, post_id,
+id, user_id, post/comment_id,
 value (1 or -1)
 
 ### Comments

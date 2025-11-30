@@ -65,6 +65,19 @@ app.get('/users/:id', (req, res) => {
     }
 })
 
+// get all posts made by a particular userid
+app.get('/users/:user_id/posts', (req, res) => {
+    const user_id = req.params.user_id
+
+    const qs = `SELECT * FROM Posts WHERE user_id=$1`
+    const params = [user_id]
+    try {
+        query(qs, params).then(data => {res.json(data.rows)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
 
 // get all posts
 app.get('/posts', (_req, res) => {
@@ -102,6 +115,29 @@ app.get('/hot-posts/:num', (req, res) => {
     }
 })
 
+// get all comments
+app.get('/comments', (_req, res) => {
+    const qs = `SELECT * FROM comments`
+    try {
+        query(qs).then(data => res.json(data.rows))
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// get all comments on a particular post
+app.get('/posts/:post_id/comments', (req, res) => {
+    const post_id = req.params.post_id
+
+    const params = [post_id]
+    const qs = `SELECT * FROM comments WHERE post_id=$1`
+    try {
+        query(qs, params).then(data => res.json(data.rows))
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
 /** POST ROUTES */
 
 // create a new user with desired fields, note that a user cannot be created with the same email as another user
@@ -125,10 +161,10 @@ app.post('/users', (req, res) => {
 
     const qs = `INSERT INTO Users 
                 (username, first_name, last_name, email, role, biography, reports, display_name)
-                values ($1, $2, $3, $4, $5, $6, $7, $8)`
+                values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
     try {
-        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new users`)})
+        query(qs, params).then(data => {res.json({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -148,7 +184,24 @@ app.post('/posts', (req, res) => {
     const qs = `INSERT INTO Posts (user_id, text_content, title, reports, likes) VALUES ($1, $2, $3, $4, $5)`
 
     try {
-        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts`)})
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts under user ${body.user_id}`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// create a new comment with the desired fields. Note that user and post ids must be valid
+app.post('/posts/:post_id/comments', (req, res) => {
+    const body = req.body
+    const user_id = body["user_id"] || null; const post_id = req.params.post_id;
+    const text_content = body["text_content"] || null
+    const reports = 0; const likes = 0;
+
+    const params = [user_id, post_id, text_content, reports, likes]
+    const qs = `INSERT INTO comments (user_id, post_id, text_content, reports, likes) VALUES ($1, $2, $3, $4, $5)`
+
+    try {
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new comments under user ${body.user_id}` )})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -203,6 +256,23 @@ app.put('/posts/:id', (req, res) => {
     }
 })
 
+// edit an existing comment
+app.put('/posts/:post_id/comments/:comment_id', (req, res) => {
+    const body = req.body
+    const post_id = req.params.post_id
+    const comment_id = req.params.comment_id
+    
+    const text_content = body["text_content"] || null
+
+    const params = [text_content, comment_id, post_id]
+    const qs = `UPDATE comments SET text_content=$1 WHERE id=$2 AND post_id=$3`
+    try {
+        query(qs, params).then(data => {res.json(`Updated ${data.rowCount} rows under post ${post_id}`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
 /** DELETE ROUTES */
 
 // delete a user
@@ -212,7 +282,7 @@ app.delete('/users/:id', (req, res) => {
     const qs = `DELETE from Users where id=$1`
     const params = [id]
     try {
-        query(qs, params).then(data => {res.json(`Number of users deleted:${data.rowCount}`)})
+        query(qs, params).then(data => {res.json(`Number of users deleted: ${data.rowCount}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -225,7 +295,34 @@ app.delete('/posts/:id', (req, res) => {
     const qs = `DELETE from Posts WHERE id=$1`
     const params = [id]
     try {
-        query(qs, params).then(data=>{res.json(`Number of posts deleted:${data.rowCount}`)})
+        query(qs, params).then(data=>{res.json(`Number of posts deleted: ${data.rowCount}`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// delete a comment
+app.delete('/comments/:id', (req, res) => {
+    const id = req.params.id
+
+    const qs = `DELETE FROM comments WHERE id=$1`
+    const params = [id]
+    try {
+        query(qs, params).then(data => {res.json(`Number of comments deleted: ${data.rowCount}`)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// delete a comment with a specific post id and comment id (kind of unnecessary but it is consistent with how comments are obtained.. so)
+app.delete('/posts/:post_id/comments/:comment_id', (req, res) => {
+    const post_id = req.params.post_id; const comment_id = req.params.comment_id
+
+    const qs = `DELETE FROM comments WHERE id=$1 AND post_id=$2`
+    const params = [comment_id, post_id]
+
+    try {
+        query(qs, params).then(data => {res.json(`Number of comments deleted: ${data.rowCount}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
