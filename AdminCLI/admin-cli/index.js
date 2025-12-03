@@ -88,45 +88,96 @@ let main
                     const userSelection = await askQuestion(`User options:\n\t1. Add\n\t2. Edit\n\t3. Delete\n`);
                         if (userSelection == 1) {
                             console.log('Add user')
-                            const setusername = askQuestion(`Please enter the information for the user you would like to add:\n\tUsername: `)
-                            const setfirst_name = askQuestion(`\n\tFirst name: `)
-                            const setlast_name = askQuestion(`\n\tLast name: `)
-                            const setemail = askQuestion(`\n\tEmail: `)
-                            const setrole = askQuestion(`\n\tRole: `)
-                            const setbiography = askQuestion(`\n\tBiography: `)
-                            const setreports = askQuestion(`\n\tReports: `)
-                            const setdisplay_name = askQuestion(`\n\tDisplay name: `)
-                            app.post('/users', (req, res) => {
-                                // body should be data gotten above by questions asked
-                                const body = [["username", setusername],["first_name", setfirst_name],["last_name", setlast_name],["email", setemail],["role", setrole],["biography", setbiography],["reports", setreports],["display_name", setdisplay_name]]
-                            
-                                const username = body["username"] || null
-                                const first_name = body["first_name"] || null
-                                const last_name = body["last_name"] || null
-                                const email = body["email"] || null
-                                const role = body["role"] || 0
-                                const biography = body["biography"] || null
-                                const reports = body["reports"] || 0
-                                const display_name = body["display_name"] || first_name + ' ' + last_name || null
-                            
-                                if (role > 2) {
-                                    res.status(400).json("Invalid role given.")
-                                }
-                            
-                                const params = [username, first_name, last_name, email, role, biography, reports, display_name]
-                            
-                                const qs = `INSERT INTO Users 
-                                            (username, first_name, last_name, email, role, biography, reports, display_name)
-                                            values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-                            
-                                try {
-                                    query(qs, params).then(data => {res.json({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})})
-                                } catch (error) {
-                                    res.status(400).json(error.message)
-                                }
-                            })
+                            const setusername = await askQuestion(`Please enter the information for the user you would like to add:\n\tUsername: `)
+                            const setfirst_name = await askQuestion(`\n\tFirst name: `)
+                            const setlast_name = await askQuestion(`\n\tLast name: `)
+                            const setemail = await askQuestion(`\n\tEmail: `)
+                            const setrole = await askQuestion(`\n\tRole: `)
+                            const setbiography = await askQuestion(`\n\tBiography: `)
+                            const setreports = await askQuestion(`\n\tReports: `)
+                            const setdisplay_name = await askQuestion(`\n\tDisplay name: `)
+                            // body should be data gotten above by questions asked
+                            //const body = [["username", setusername],["first_name", setfirst_name],["last_name", setlast_name],["email", setemail],["role", setrole],["biography", setbiography],["reports", setreports],["display_name", setdisplay_name]]
+                        
+                            const username = setusername || null
+                            const first_name = setfirst_name || null
+                            const last_name = setlast_name || null
+                            const email = setemail || null
+                            const role = setrole || 0
+                            const biography = setbiography || null
+                            const reports = setreports || 0
+                            const display_name = setdisplay_name || first_name + ' ' + last_name || null
+                        
+                            if (role > 2) {
+                                console.log("Invalid role given.")
+                            }
+                        
+                            const params = [username, first_name, last_name, email, role, biography, reports, display_name]
+                        
+                            const qs = `INSERT INTO Users 
+                                        (username, first_name, last_name, email, role, biography, reports, display_name)
+                                        values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+                        
+                            try {
+                                query(qs, params).then(data => {console.log({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})})
+                            } catch (error) {
+                                console.log(error.message)
+                            }
                         } else if (userSelection == 2) {
                             console.log('Edit user')
+                            const idorusername = await askQuestion(`Please enter the id or username of the user you would like to edit: `)
+                            
+                            // get original user data and instead of || null do || original data
+                            const qs0 = `SELECT * FROM Users WHERE username=$1`
+                            const qs1 = `SELECT * FROM Users WHERE user_id=$1`
+                            const params0 = [idorusername]
+                            let user = null
+                            try {
+                                if (isNaN(idorusername)) {
+                                    user = await query(qs0, params0)
+                                    user = user.rows
+                                    console.log(user)
+                                } else {
+                                    user = await query(qs1, params0)
+                                    user = user.rows
+                                    console.log(user)
+                                }
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                            const setusername = await askQuestion(`Please enter the information you would like to edit for this user:\n\tUsername: `)
+                            const setfirst_name = await askQuestion(`\n\tFirst name: `)
+                            const setlast_name = await askQuestion(`\n\tLast name: `)
+                            const setemail = await askQuestion(`\n\tEmail: `)
+                            const setrole = await askQuestion(`\n\tRole: `)
+                            const setbiography = await askQuestion(`\n\tBiography: `)
+                            const setreports = await askQuestion(`\n\tReports: `)
+                            const setdisplay_name = await askQuestion(`\n\tDisplay name: `)
+                            
+                            
+                            const username = setusername || user[0].username
+                            const first_name = setfirst_name || user[0].first_name
+                            const last_name = setlast_name || user[0].last_name
+                            const email = setemail || user[0].email
+                            const role = setrole || user[0].role
+                            const biography = setbiography || user[0].biography
+                            const reports = setreports || user[0].reports
+                            const display_name = setdisplay_name || user[0].display_name
+                            const id = user[0].id
+                        
+                            if (role > 2) {
+                                console.log("Invalid role given.")
+                            }
+                        
+                            const params = [username, first_name, last_name, email, role, biography, reports, display_name, id]
+                        
+                            const qs = `UPDATE Users set username=$1, first_name = $2, last_name=$3, email=$4, role=$5, biography=$6, reports=$7, display_name=$8 WHERE id=$9`
+                        
+                            try {
+                                query(qs, params).then(data => {console.log(`Number of users updated:${data.rowCount}`)})
+                            } catch (error) {
+                                console.log(error.message)
+                            }
                         } else if (userSelection == 3) {
                             console.log('Delete user')
                         } else {
