@@ -1,5 +1,25 @@
+// same imports as server.js in server so queries can be used
+import express from 'express'
+import cors from 'cors'
+
+import 'dotenv/config' //This will pull in the .env file
+
+// import readline so I can do command line interaction
+import readline from 'node:readline'
+
+import { query } from './util/postgres.js'
+
+const DB_PORT = process.env.DB_PORT
+
+const app = express()
+
+app.set('port', DB_PORT)
+
+app.use(express.json())
+app.use(cors())
+
 // Basic command line interaction in JS from nodejs.org
-const readline = require('node:readline');
+//const readline = require('node:readline');
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -43,17 +63,17 @@ const main = async () => {
                 userSelection = await askQuestion(`User options:\n\t1. Add\n\t2. Edit\n\t3. Delete\n`);
                     if (userSelection == 1) {
                         console.log('Add user')
-                        const username = askQuestion(`Please enter the information for the user you would like to add:\n\tUsername: `)
-                        const first_name = askQuestion(`\n\tFirst name: `)
-                        const last_name = askQuestion(`\n\tLast name: `)
-                        const email = askQuestion(`\n\tEmail: `)
-                        const role = askQuestion(`\n\tRole: `)
-                        const biography = askQuestion(`\n\tBiography: `)
-                        const reports = askQuestion(`\n\tReports: `)
-                        const display_name = askQuestion(`\n\tDisplay name: `)
+                        const setusername = askQuestion(`Please enter the information for the user you would like to add:\n\tUsername: `)
+                        const setfirst_name = askQuestion(`\n\tFirst name: `)
+                        const setlast_name = askQuestion(`\n\tLast name: `)
+                        const setemail = askQuestion(`\n\tEmail: `)
+                        const setrole = askQuestion(`\n\tRole: `)
+                        const setbiography = askQuestion(`\n\tBiography: `)
+                        const setreports = askQuestion(`\n\tReports: `)
+                        const setdisplay_name = askQuestion(`\n\tDisplay name: `)
                         app.post('/users', (req, res) => {
                             // body should be data gotten above by questions asked
-                            const body = [["username", username],["first_name", first_name],["last_name", last_name],["email", email],["role", role],["biography", biography],["reports", reports],["display_name", display_name]]
+                            const body = [["username", setusername],["first_name", setfirst_name],["last_name", setlast_name],["email", setemail],["role", setrole],["biography", setbiography],["reports", setreports],["display_name", setdisplay_name]]
                         
                             const username = body["username"] || null
                             const first_name = body["first_name"] || null
