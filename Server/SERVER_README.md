@@ -26,6 +26,9 @@ Returns all posts a user has made
 ### /posts
 Returns all posts
 
+### /posts/:id
+Returns the post with the specified id, and all of it's comments
+
 ### /recent-posts/:num
 Returns the 'num' most recent posts
 
@@ -149,7 +152,7 @@ reports (# of times user has been reported)
 
 ### Posts
 Fields:
-id, user_id,
+id, user_id, username
 title, text_content,
 likes,
 reports (# of times post has been reported)
@@ -161,7 +164,7 @@ value (1 or -1)
 
 ### Comments
 Fields:
-id, user_id, post_id,
+id, user_id, post_id, username
 created_at,
 text_content,
 reports (# of times comment has been reported)

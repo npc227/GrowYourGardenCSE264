@@ -89,6 +89,24 @@ app.get('/posts', (_req, res) => {
     }
 })
 
+// get post with specified id
+app.get('/posts/:id', async (req, res) => {
+    const qs = `SELECT * From Posts WHERE id=$1`
+    const comment_qs = `SELECT * From Comments WHERE post_id=$1`
+
+    const params = [req.params.id]
+    try {
+        let comment_data = await query(comment_qs, params)
+        comment_data = comment_data.rows
+        let post_data = await query(qs,params)
+        post_data = post_data.rows[0]
+        post_data["comments"] = comment_data; 
+        res.json(post_data)
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
 //get top {num} recent posts
 app.get('/recent-posts/:num', (req, res) => {
     const num = req.params.num
@@ -171,17 +189,20 @@ app.post('/users', (req, res) => {
 })
 
 // create a new post with desired fields. Note that user ID must be a valid user
-app.post('/posts', (req, res) => {
+app.post('/posts', async (req, res) => {
     const body = req.body
 
     const user_id = body["user_id"] || null
+    let username = await query(`SELECT username FROM users WHERE id=${user_id}`)
+    username = username.rows[0]["username"]
+
     const text_content = body["text_content"] || null
     const title = body["title"] || null
 
     const reports = 0; const likes = 0; //no likes or reports by default... obviously...
 
-    const params = [user_id, text_content, title, reports, likes]
-    const qs = `INSERT INTO Posts (user_id, text_content, title, reports, likes) VALUES ($1, $2, $3, $4, $5)`
+    const params = [user_id, username, text_content, title, reports, likes]
+    const qs = `INSERT INTO Posts (user_id, username, text_content, title, reports, likes) VALUES ($1, $2, $3, $4, $5, $6)`
 
     try {
         query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts under user ${body.user_id}`)})
@@ -191,14 +212,17 @@ app.post('/posts', (req, res) => {
 })
 
 // create a new comment with the desired fields. Note that user and post ids must be valid
-app.post('/posts/:post_id/comments', (req, res) => {
+app.post('/posts/:post_id/comments', async (req, res) => {
     const body = req.body
     const user_id = body["user_id"] || null; const post_id = req.params.post_id;
     const text_content = body["text_content"] || null
     const reports = 0; const likes = 0;
 
-    const params = [user_id, post_id, text_content, reports, likes]
-    const qs = `INSERT INTO comments (user_id, post_id, text_content, reports, likes) VALUES ($1, $2, $3, $4, $5)`
+    let username = await query(`SELECT username FROM users WHERE id=${user_id}`)
+    username = username.rows[0]["username"]
+
+    const params = [user_id, username, post_id, text_content, reports, likes]
+    const qs = `INSERT INTO comments (user_id, username, post_id, text_content, reports, likes) VALUES ($1, $2, $3, $4, $5, $6)`
 
     try {
         query(qs, params).then(data => {res.json(`Created ${data.rowCount} new comments under user ${body.user_id}` )})
