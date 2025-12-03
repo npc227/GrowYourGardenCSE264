@@ -27,20 +27,42 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
     const [title, setTitle] = useState()
     const [text, setTextContent] = useState()
     const [likes, setLikes] = useState()
+    //const [userProfInf, setUserInfo] = useState()
 
     //sets post values upon load
     useEffect(() => {
         setUserID(post?.user_id || '')
+/*
+        const getUser = async() => {
+        fetch(`http://localhost:3000/users/${user}`, {
+            method: 'GET',
+            })
+            .then(res => {
+            if(!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`)
+            }
+            return res.json()
+            })
+            .then(resData => {
+            console.log(resData)
+            setUserID(resData[0].username)
+
+            })
+
+        }
+        getUser()*/
+
         setTitle(post?.title || '')
         setTextContent(post?.text_content || '')
         setLikes(post?.likes || '')
+
     }, [post])
 
   //main area to display post info
   return ( 
     <Modal open={PostModalOpen} onClose={handleModalClose}>
       <Box sx={style}>
-        <h1>title: {user}</h1>
+        <h1>username: {user}</h1>
         <h1>title: {title}</h1>
         <h2>text_content: {text}</h2>
         <h3>likes: {likes}</h3>

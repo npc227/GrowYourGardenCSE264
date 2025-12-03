@@ -50,6 +50,7 @@ function App() {
       console.log(posts)
 
     })
+
   }
 
   //useffect for checking api status and running getPosts
