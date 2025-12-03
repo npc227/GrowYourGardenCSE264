@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
+import React from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-/*Custom components!
+/*Custom components! (and modal)
 NavBar - contains logo, login, profile*/
 import NavBar from './components/NavBar'
+
+//note: postModal adapted from my job application tracjer project
+import PostModal from './components/PostModal'
 
 //import test images from tempimages
 //(these are images from a seperate project of mine - DES153)
@@ -20,11 +24,14 @@ import TI7 from './assets/tempart/firdge.jpg'
 function App() {
   //const [count, setCount] = useState(0)
 
-  //attempt to get applications, usestate for apps
-  //added UseEffect in accordance with live code
+  //attempt to get posts, usestate for posts
+  //also: usestate for post modal, setting selected post
   const [posts, setPosts] = useState([])
+  const [PostModalOpen, setPostModalOpen] = useState(false)
+  const [selectedPost, setSelPost] = useState()
   
-  //get applications to be used when things are updated, posted, or edited to keep
+  //get posts to be used when something is posted
+  //nts:: add randomizer in here!!! can reactivate whenever seed packet clicked
   //accurate updates of content
   const getPosts = async() => {
     fetch('http://localhost:3000/posts', {
@@ -42,7 +49,7 @@ function App() {
     })
   }
 
-  //useffect for checking api status and running getApplications
+  //useffect for checking api status and running getPosts
   useEffect(() => {
 
     fetch('http://localhost:3000/up')
@@ -65,14 +72,23 @@ function App() {
 
         {/*Posts displayed in a grid: currently, 2x2. Responsiveness, change to 1x4 stack upon window shrink*/}
         <div class={'postGrid'}>
-          <img src={TI1}></img>
+          <img src={TI1} onClick={ () =>{
+            setSelPost(posts[0])
+            setPostModalOpen(true)
+          }
+          }></img>
           <img src={TI4}></img>
           <img src={TI6}></img>
-          <img SRC={TI7}></img>
+          <img src={TI7}></img>
           
         </div>
 
       </section>
+
+
+      {/*Modal for post info!*/}
+      <PostModal PostModalOpen={PostModalOpen} setPostModalOpen={setPostModalOpen} post={selectedPost}
+    />
 
     </>
   )
