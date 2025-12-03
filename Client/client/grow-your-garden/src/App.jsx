@@ -12,7 +12,6 @@ import NavBar from './components/NavBar'
 import PostModal from './components/PostModal'
 
 //import test images from tempimages
-//(these are images from a seperate project of mine - DES153)
 import TI1 from './assets/tempart/snake.jpg'
 import TI2 from './assets/tempart/thunder.jpg'
 import TI3 from './assets/tempart/cat.jpg'
@@ -45,7 +44,11 @@ function App() {
     })
     .then(resData => {
       console.log(resData)
-      setPosts(resData)
+
+      //shuffle the JSON data before putting it in posts
+      setPosts(shufflePosts(resData))
+      console.log(posts)
+
     })
   }
 
@@ -61,6 +64,29 @@ function App() {
     getPosts()
 
   }, [])
+
+  //post randomizer
+  //post grid will auto pull first 4 posts, so shuffling all is a simpler algoritm
+  //than creating an entirely different array/tracker for random index of posts 
+  //(trust me, I tried... :3)
+  function shufflePosts(postArr) {
+    console.log("enter shuffle")
+
+    //Using Fisher-Yates Algorithm adapted from
+    //the demonstration here: https://www.geeksforgeeks.org/dsa/shuffle-a-given-array-using-fisher-yates-shuffle-algorithm/
+    for (let i = postArr.length - 1; i > 0; i--){
+      console.log("enter shuffle iteration" + i)
+      
+      //pick a random index with a value from 0 to length of posts - 1
+      //(aka: all possible indexes, since start at 0)
+      let j = Math.floor(Math.random() * (i + 1)); 
+
+      //swap element at posts[i] with the element at posts[j]
+      [postArr[i], postArr[j]] = [postArr[j], postArr[i]];
+    } 
+    return postArr
+
+  }
 
   return (
     <>
