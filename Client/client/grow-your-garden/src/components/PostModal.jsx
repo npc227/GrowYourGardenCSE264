@@ -2,7 +2,9 @@
 //and my job application tracker
 //show post info
 import {useState, useEffect} from 'react'
-import {Modal, Box} from '@mui/material'
+import {Modal, Box, gridClasses} from '@mui/material'
+
+import './PostModal.css'
 
 export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
 
@@ -15,11 +17,18 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 400,
+        width: 700,
         bgcolor: 'blanchedalmond',
-        border: '2px solid #000',
+        border: '2px solid #815717ff',
         boxShadow: 24,
         p: 4,
+
+        //more customize:\
+        fontFamily: "Verdana", 
+        display: "grid",
+        gridTemplateColumns: "300px 250px", // column widths
+        gap: "10px", // space between grid items
+        padding: "30px",
     };
 
     //usestates for important values
@@ -62,10 +71,19 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
   return ( 
     <Modal open={PostModalOpen} onClose={handleModalClose}>
       <Box sx={style}>
-        <h1>username: {user}</h1>
-        <h1>title: {title}</h1>
-        <h2>text_content: {text}</h2>
-        <h3>likes: {likes}</h3>
+
+        {/*text info*/}
+        <div>
+          <h1 class={'textColor'}>{title}</h1>
+          <h2 class={'textColor'}>Creator ID: {user}</h2>
+          <h3 class={'textColor'}>{text}</h3>
+
+        </div>
+
+        <div class={'tempImg'}>
+
+        </div>
+
       </Box>
     </Modal>
   )
