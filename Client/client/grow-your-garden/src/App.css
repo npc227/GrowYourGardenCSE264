@@ -76,6 +76,15 @@ body {
 
 }
 
+#seedImg {
+
+  width: 67px;
+  height: 67px;
+  align-self: center;
+  margin-top: 1em;
+
+}
+
 /*Responsive grid to fit smaller screens*/
 @media only screen and (max-width: 760px) {
 

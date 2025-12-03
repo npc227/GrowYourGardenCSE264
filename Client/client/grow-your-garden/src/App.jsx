@@ -20,6 +20,9 @@ import TI5 from './assets/tempart/pup.jpg'
 import TI6 from './assets/tempart/apple.jpg'
 import TI7 from './assets/tempart/firdge.jpg'
 
+//and seed logo
+import seed from './assets/tempart/gygseed.png'
+
 function App() {
   //const [count, setCount] = useState(0)
 
@@ -97,9 +100,19 @@ function App() {
       {/*Seperate from navbar: main body of page. keep all elements column aligned in the center*/}
       <section class={'pageElements'}>
 
+        <img src={seed} id={'seedImg'} onClick={ () => {
+
+          let tempArr = posts
+          console.log(tempArr)
+          setPosts(shufflePosts(tempArr))
+          console.log(posts)
+            
+          }
+          }></img>
+
         {/*Posts displayed in a grid: currently, 2x2. Responsiveness, change to 1x4 stack upon window shrink*/}
         <div class={'postGrid'}>
-          <img src={TI1} onClick={ () =>{
+          <img src={TI1} onClick={ () => {
             setSelPost(posts[0])
             setPostModalOpen(true)
           }
