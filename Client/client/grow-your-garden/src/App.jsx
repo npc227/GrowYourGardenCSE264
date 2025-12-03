@@ -104,9 +104,21 @@ function App() {
             setPostModalOpen(true)
           }
           }></img>
-          <img src={TI4}></img>
-          <img src={TI6}></img>
-          <img src={TI7}></img>
+          <img src={TI4} onClick={ () =>{
+            setSelPost(posts[1])
+            setPostModalOpen(true)
+          }
+          }></img>
+          <img src={TI6} onClick={ () =>{
+            setSelPost(posts[2])
+            setPostModalOpen(true)
+          }
+          }></img>
+          <img src={TI7} onClick={ () =>{
+            setSelPost(posts[3])
+            setPostModalOpen(true)
+          }
+          }></img>
           
         </div>
 
