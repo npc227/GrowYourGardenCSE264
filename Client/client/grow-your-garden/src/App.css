@@ -49,3 +49,47 @@ will specify in certain elements if padding is needed*/
 body {
   padding: 0;
 }
+
+/*General container to keep page elements in a neat column*/
+.pageElements {
+  display: flex;
+  flex-direction: column;
+  justify-self: center;
+}
+
+/*grid for post images. give them a brown border (dirt-esque)*/
+.postGrid {
+  display: grid;
+  max-width: 700px;
+  grid-template-columns: 1fr 1fr;
+  align-content: center;
+  padding: 30px;
+  gap: 40px;
+
+  img {
+    border-radius: 5%;
+    width: 300px;
+    height: 300px;
+    box-shadow: 4px 4px 4px 4px #9a774eff;
+    
+  }
+
+}
+
+/*Responsive grid to fit smaller screens*/
+@media only screen and (max-width: 760px) {
+
+  .postGrid {
+    display: grid;
+    max-width: 500;
+    grid-template-columns: 1fr;
+
+    img {
+      border-radius: 5%;
+      max-width: 200px;
+      max-height: 200px;
+    }
+
+  }
+
+}
