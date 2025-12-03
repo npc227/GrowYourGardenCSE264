@@ -17,8 +17,8 @@ const NavBar = () => {
 
         {/*temp placeholders -- replace with modals for login/profile*/}
         <div class={'links'}>
-            <h3>login</h3>
-            <h3>profile</h3>
+            <h3>Log In</h3>
+            <h3>Profile</h3>
         </div>
 
       </nav>
