@@ -25,24 +25,7 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-// I think something with the promise in this function is triggering an error now and I don't know how to fix it
-// node:internal/process/promises:394 triggerUncaughtException(err, true /* fromPromise */);
-// Also somehting with port 5432 which isn't even called before the error happens and only in the .env file and the table intro still runs
 const askQuestion = (question) => {
-//   return new Promise((resolve, reject) => {
-//     rl.question(question, (answer) => {
-//       resolve(answer);
-//     });
-//   });
-    // return new Promise((resolve, reject) => {
-    //     try {
-    //         rl.question(question, (answer) => {
-    //                 resolve(answer)
-    //         });
-    //     } catch(error) {
-    //         reject(error)
-    //     }
-    // });
     try {
         return new Promise((resolve, reject) => {
                 rl.question(question, (answer) => {
@@ -54,17 +37,6 @@ const askQuestion = (question) => {
     }
 };
 
-// can't seem to get it to run only once, trying to use code from StackOverflow
-// var something = (function() {
-//     var executed = false;
-//     return function() {
-//         if (!executed) {
-//             executed = true;
-//             main()
-//         }
-//     };
-// })();
-// Think this made it run once now but now once you quit it doesn't stop the program
 function once(fn, context) { 
     var result;
     return function() { 
@@ -82,9 +54,9 @@ let main
     try {
         main = async () => {
         while (firstSelection != 5) {
+            // quit option does not work btw
             const firstSelection = await askQuestion(`Welcome Admin!\nPlease enter the number of the table you would like to interact with:\n\t1. Users\n\t2. Posts\n\t3. Comments\n\t4. Reports\n\t5. Quit\n`);
                 if (firstSelection == 1) {
-                    //console.log("Users options:")
                     const userSelection = await askQuestion(`User options:\n\t1. Add\n\t2. Edit\n\t3. Delete\n`);
                         if (userSelection == 1) {
                             console.log('Add user')
@@ -96,9 +68,8 @@ let main
                             const setbiography = await askQuestion(`\n\tBiography: `)
                             const setreports = await askQuestion(`\n\tReports: `)
                             const setdisplay_name = await askQuestion(`\n\tDisplay name: `)
-                            // body should be data gotten above by questions asked
-                            //const body = [["username", setusername],["first_name", setfirst_name],["last_name", setlast_name],["email", setemail],["role", setrole],["biography", setbiography],["reports", setreports],["display_name", setdisplay_name]]
-                        
+
+                            // params should be data gotten above by questions asked
                             const username = setusername || null
                             const first_name = setfirst_name || null
                             const last_name = setlast_name || null
@@ -180,13 +151,128 @@ let main
                             }
                         } else if (userSelection == 3) {
                             console.log('Delete user')
+                            const idorusername = await askQuestion(`Please enter the id or username of the user you would like to delete: `)
+                            const params = [idorusername]
+                            
+                            // need to be able to process for both id and username
+                            const qsNaN = `DELETE from Users WHERE username=$1`
+                            const qsNum = `DELETE from Users WHERE id=$1`
+                        
+                            try {
+
+                                if (isNaN(idorusername)) {
+                                    query(qsNaN, params).then(data => console.log(`${data.rowCount} row deleted`))
+                                } else {
+                                    query(qsNum, params).then(data => console.log(`${data.rowCount} row deleted`))
+                                }
+                            } catch (error) {
+                                console.log(error.message)
+                            }
                         } else {
                             console.log("Wrong number Admin, please try again later.")
                         }
                 } else if (firstSelection == 2) {
-                    console.log("Posts options:")
+                    const postsSelection = await askQuestion(`Posts options:\n\t1. Edit\n\t2. Delete\n`);
+                        if (postsSelection == 1) {
+                            console.log('Edit post')
+                            const id0 = await askQuestion(`Please enter the id of the post you would like to edit: `)
+                            
+                            // get original user data and instead of || null do || original data
+                            const qs0 = `SELECT * FROM Posts WHERE id=$1`
+                            const params0 = [id0]
+                            let post = null
+                            try {
+                                post = await query(qs0, params0)
+                                post = post.rows
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                            const settext_content = await askQuestion(`Please enter the information you would like to edit for this post:\n\tText content: `)
+                            const settitle = await askQuestion(`\n\tTitle: `)
+                            const setreports = await askQuestion(`\n\tReports: `)
+                            const setlikes = await askQuestion(`\n\tLikes: `)
+                            
+                            // not editing username or user id because it doesn't make sense to edit who made the post from the command line
+                            const text_content = settext_content || post[0].text_content
+                            const title = settitle || post[0].title
+                            const reports = setreports || post[0].reports
+                            const likes = setlikes || post[0].likes
+                            const id = post[0].id
+                        
+                            const params = [text_content, title, reports, likes, id]
+                            
+                            const qs = `UPDATE Posts set text_content = $1, title=$2, reports=$3, likes=$4 WHERE id=$5`
+                        
+                            try {
+                                query(qs, params).then(data => {console.log(`Number of posts updated:${data.rowCount}`)})
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                        } else if (postsSelection == 2) {
+                            console.log('Delete post')
+                            const id = await askQuestion(`Please enter the id of the post you would like to delete: `)
+                            const params = [id]
+                            
+                            const qs = `DELETE from Posts WHERE id=$1`
+                        
+                            try {
+                                query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                        } else {
+                            console.log("Wrong number Admin, please try again later.")
+                        }
                 } else if (firstSelection == 3) {
-                    console.log("Comments options:")
+                    const commentsSelection = await askQuestion(`Comments options:\n\t1. Edit\n\t2. Delete\n`);
+                        if (commentsSelection == 1) {
+                            console.log('Edit comment')
+                            const id0 = await askQuestion(`Please enter the id of the comment you would like to edit: `)
+                            
+                            // get original user data and instead of || null do || original data
+                            const qs0 = `SELECT * FROM Comments WHERE id=$1`
+                            const params0 = [id0]
+                            let comment = null
+                            try {
+                                comment = await query(qs0, params0)
+                                comment = comment.rows
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                            const settext_content = await askQuestion(`Please enter the information you would like to edit for this comment:\n\tText content: `)
+                            const setreports = await askQuestion(`\n\tReports: `)
+                            const setlikes = await askQuestion(`\n\tLikes: `)
+                            
+                            // not editing username, user_id, or post_id
+                            const text_content = settext_content || comment[0].text_content
+                            const reports = setreports || comment[0].reports
+                            const likes = setlikes || comment[0].likes
+                            const id = comment[0].id
+                        
+                            const params = [text_content, reports, likes, id]
+                            
+                            const qs = `UPDATE Comments set text_content = $1, reports=$2, likes=$3 WHERE id=$4`
+                        
+                            try {
+                                query(qs, params).then(data => {console.log(`Number of comments updated:${data.rowCount}`)})
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                        } else if (commentsSelection == 2) {
+                            console.log('Delete comment')
+                            const id = await askQuestion(`Please enter the id of the comment you would like to delete: `)
+                            const params = [id]
+                            
+                            const qs = `DELETE from Comments WHERE id=$1`
+                        
+                            try {
+                                query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                        } else {
+                            console.log("Wrong number Admin, please try again later.")
+                        }
                 } else if (firstSelection == 4) {
                     console.log("Reports options:")
                 } else if (firstSelection == 5) {
