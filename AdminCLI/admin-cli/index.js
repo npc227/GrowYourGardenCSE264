@@ -57,7 +57,7 @@ let main
             // quit option does not work btw
             const firstSelection = await askQuestion(`Welcome Admin!\nPlease enter the number of the table you would like to interact with:\n\t1. Users\n\t2. Posts\n\t3. Comments\n\t4. Reports\n\t5. Quit\n`);
                 if (firstSelection == 1) {
-                    const userSelection = await askQuestion(`User options:\n\t1. Add\n\t2. Edit\n\t3. Delete\n`);
+                    const userSelection = await askQuestion(`User options:\n\t1. Add\n\t2. Edit\n\t3. Delete\n\t4. Get\n`);
                         if (userSelection == 1) {
                             console.log('Add user')
                             const setusername = await askQuestion(`Please enter the information for the user you would like to add:\n\tUsername: `)
@@ -100,7 +100,7 @@ let main
                             
                             // get original user data and instead of || null do || original data
                             const qs0 = `SELECT * FROM Users WHERE username=$1`
-                            const qs1 = `SELECT * FROM Users WHERE user_id=$1`
+                            const qs1 = `SELECT * FROM Users WHERE id=$1`
                             const params0 = [idorusername]
                             let user = null
                             try {
@@ -168,11 +168,48 @@ let main
                             } catch (error) {
                                 console.log(error.message)
                             }
+                        } else if (userSelection == 4) {
+                            console.log("Get user(s)")
+                            const oneOrMore = await askQuestion(`Get options:\n\t1. Get all users\n\t2. Get a specific user\n`)
+                            if (oneOrMore == 1) {
+                                const qs = `SELECT * FROM Users`
+                                try {
+                                    query(qs).then(data => {
+                                        for (let i = 0; i < data.rowCount; i++) {
+                                            console.log(data.rows[i])
+                                        }
+                                    })
+                                } catch (error) {
+                                    console.log(error.message)
+                                }
+                            } else if (oneOrMore == 2) {
+                                const idorusername = await askQuestion(`Please enter the id or username of the user you would like to get: `)
+                            
+                                const qs0 = `SELECT * FROM Users WHERE username=$1`
+                                const qs1 = `SELECT * FROM Users WHERE id=$1`
+                                const params0 = [idorusername]
+                                let user = null
+                                try {
+                                    if (isNaN(idorusername)) {
+                                        user = await query(qs0, params0)
+                                        user = user.rows
+                                        console.log(user)
+                                    } else {
+                                        user = await query(qs1, params0)
+                                        user = user.rows
+                                        console.log(user)
+                                    }
+                                } catch (error) {
+                                    console.log(error.message)
+                                }
+                            } else {
+                                console.log("Not a get option, please try again later.")
+                            }
                         } else {
                             console.log("Wrong number Admin, please try again later.")
                         }
                 } else if (firstSelection == 2) {
-                    const postsSelection = await askQuestion(`Posts options:\n\t1. Edit\n\t2. Delete\n`);
+                    const postsSelection = await askQuestion(`Posts options:\n\t1. Edit\n\t2. Delete\n\t3. Get\n`);
                         if (postsSelection == 1) {
                             console.log('Edit post')
                             const id0 = await askQuestion(`Please enter the id of the post you would like to edit: `)
@@ -220,11 +257,40 @@ let main
                             } catch (error) {
                                 console.log(error.message)
                             }
+                        } else if (postsSelection == 3) {
+                            console.log("Get post(s)")
+                            const oneOrMore = await askQuestion(`Get options:\n\t1. Get all posts\n\t2. Get a specific post\n`)
+                            if (oneOrMore == 1) {
+                                const qs = `SELECT * FROM Posts`
+                                try {
+                                    query(qs).then(data => {
+                                        for (let i = 0; i < data.rowCount; i++) {
+                                            console.log(data.rows[i])
+                                        }
+                                    })
+                                } catch (error) {
+                                    console.log(error.message)
+                                }
+                            } else if (oneOrMore == 2) {
+                                const id = await askQuestion(`Please enter the id of the post you would like to get: `)
+                                const qs = `SELECT * FROM Posts WHERE id=$1`
+                                const params = [id]
+                                let post = null
+                                try {
+                                    post = await query(qs, params)
+                                    post = post.rows
+                                    console.log(post)
+                                } catch (error) {
+                                    console.log(error.message)
+                                }
+                            } else {
+                                console.log("Not a get option, please try again later.")
+                            }
                         } else {
                             console.log("Wrong number Admin, please try again later.")
                         }
                 } else if (firstSelection == 3) {
-                    const commentsSelection = await askQuestion(`Comments options:\n\t1. Edit\n\t2. Delete\n`);
+                    const commentsSelection = await askQuestion(`Comments options:\n\t1. Edit\n\t2. Delete\n\t3. Get\n`);
                         if (commentsSelection == 1) {
                             console.log('Edit comment')
                             const id0 = await askQuestion(`Please enter the id of the comment you would like to edit: `)
@@ -270,11 +336,42 @@ let main
                             } catch (error) {
                                 console.log(error.message)
                             }
+                        } else if (commentsSelection == 3) {
+                            console.log("Get comment(s)")
+                            const oneOrMore = await askQuestion(`Get options:\n\t1. Get all comments\n\t2. Get a specific comment\n`)
+                            if (oneOrMore == 1) {
+                                const qs = `SELECT * FROM Comments`
+                                try {
+                                    query(qs).then(data => {
+                                        for (let i = 0; i < data.rowCount; i++) {
+                                            console.log(data.rows[i])
+                                        }
+                                    })
+                                } catch (error) {
+                                    console.log(error.message)
+                                }
+                            } else if (oneOrMore == 2) {
+                                const id = await askQuestion(`Please enter the id of the comment you would like to get: `)
+                                const qs = `SELECT * FROM Comments WHERE id=$1`
+                                const params = [id]
+                                let comment = null
+                                try {
+                                    comment = await query(qs, params)
+                                    comment = comment.rows
+                                    console.log(comment)
+                                } catch (error) {
+                                    console.log(error.message)
+                                }
+                            } else {
+                                console.log("Not a get option, please try again later.")
+                            }
                         } else {
                             console.log("Wrong number Admin, please try again later.")
                         }
                 } else if (firstSelection == 4) {
                     console.log("Reports options:")
+                    const reportsSelection = await askQuestion(`Reports options:\n\t1. Sort users by number of reports\n\t2. Sort posts by number of reports\n`);
+                    
                 } else if (firstSelection == 5) {
                     console.log("Goodbye")
                     return;
@@ -285,7 +382,6 @@ let main
                 }
             }
             rl.close();
-        // console.log(`Hi ${name}!`);
     } 
 } catch (error) {
         console.log(error)
