@@ -7,6 +7,8 @@ import 'dotenv/config' //This will pull in the .env file
 import { query } from './util/postgres.js'
 
 const DB_PORT = process.env.DB_PORT
+// these are the three report types
+const USER_REPORT = 0; const POST_REPORT = 1; const COMMENT_REPORT = 2;
 
 const app = express()
 
@@ -218,6 +220,10 @@ app.post('/posts/:post_id/comments', async (req, res) => {
     const text_content = body["text_content"] || null
     const reports = 0; const likes = 0;
 
+    if (!user_id || !post_id) {
+        res.status(400).json("Missing required fields")
+    }
+
     let username = await query(`SELECT username FROM users WHERE id=${user_id}`)
     username = username.rows[0]["username"]
 
@@ -225,10 +231,82 @@ app.post('/posts/:post_id/comments', async (req, res) => {
     const qs = `INSERT INTO comments (user_id, username, post_id, text_content, reports, likes) VALUES ($1, $2, $3, $4, $5, $6)`
 
     try {
-        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new comments under user ${body.user_id}` )})
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new comments under user ${body.user_id}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
+})
+
+// create a new report on a user
+app.post('/users/:id/reports', async (req, res) => {
+    const body = req.body;
+    const user_id = body["user_id"] || null; const reported_user_id = req.params.id
+    const text_content = body["text_content"] || null
+    const type = USER_REPORT
+
+    if (!user_id || ! text_content) {
+        res.status(400).json("Missing required fields!")
+    }
+
+    const params = [user_id, text_content, reported_user_id, type]
+    const qs = `INSERT INTO reports (user_id, text_content, target_id, type) VALUES ($1, $2, $3, $4)`
+    try {
+        let data = await query(qs, params)
+        data = data.rowCount
+        addReportsOnUser(reported_user_id, 1)
+        res.json(`Created ${data} new reports under user with id ${user_id} on user ${reported_user_id}`)
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+
+})
+
+// create a new report on a post
+app.post('/posts/:id/reports', async (req, res) => {
+    const body = req.body;
+    const user_id = body["user_id"] || null; const post_id = req.params.id
+    const text_content = body["text_content"] || null
+    const type = POST_REPORT
+
+    if (!user_id || ! text_content) {
+        res.status(400).json("Missing required fields!")
+    }
+
+    const params = [user_id, text_content, post_id, type]
+    const qs = `INSERT INTO reports (user_id, text_content, target_id, type) VALUES ($1, $2, $3, $4)`
+    try {
+        let data = await query(qs, params)
+        data = data.rowCount
+        addReportsOnPost(post_id, 1)
+        res.json(`Created ${data} new reports under user with id ${user_id} on post ${post_id}`)
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+
+})
+
+// create a new report on a post
+app.post('/comments/:id/reports', async (req, res) => {
+    const body = req.body;
+    const user_id = body["user_id"] || null; const comment_id = req.params.id
+    const text_content = body["text_content"] || null
+    const type = COMMENT_REPORT
+
+    if (!user_id || ! text_content) {
+        res.status(400).json("Missing required fields!")
+    }
+
+    const params = [user_id, text_content, comment_id, type]
+    const qs = `INSERT INTO reports (user_id, text_content, target_id, type) VALUES ($1, $2, $3, $4)`
+    try {
+        let data = await query(qs, params)
+        data = data.rowCount
+        addReportsOnComment(comment_id, 1)
+        res.json(`Created ${data} new reports under user with id ${user_id} on comment ${comment_id}`)
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+
 })
 
 /** PUT ROUTES */
@@ -554,6 +632,33 @@ async function addLikesOnPost(post_id, num) {
 /** Helper function to adjust the number of total likes and dislikes (as a score) a comment has */
 async function addLikesOnComment(comment_id, num) {
     const qs = `UPDATE comments SET likes = likes + ${num} WHERE id=$1`
+    const params = [comment_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to add a report to a user */
+async function addReportsOnUser(user_id, num) {
+    const qs = `UPDATE users SET reports = reports + ${num} WHERE id=$1`
+    const params = [user_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to add a report to a post */
+async function addReportsOnPost(post_id, num) {
+    const qs = `UPDATE posts SET reports = reports + ${num} WHERE id=$1`
+    const params = [post_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to add a report to a comment */
+async function addReportsOnComment(comment_id, num) {
+    const qs = `UPDATE comments SET reports = reports + ${num} WHERE id=$1`
     const params = [comment_id]
 
     await query(qs, params)

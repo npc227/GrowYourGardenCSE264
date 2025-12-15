@@ -139,6 +139,21 @@ Attempts to dislike post. Has same logic as above. Also requires a json body as 
 ### /posts/:post_id/comment/:comment_id/like || dislike
 Functions same as above, but for comments!
 
+## REPORT ROUTES (all POST)
+### /posts/:post_id/reports
+Attempts to add a report to a post. Requires the user_id (until OAUTH is added) and a text_body.
+*EXAMPLE JSON BODY:*
+{
+    "user_id":-1,
+    "text_content":"This post is stupid!"
+}
+
+### /users/:user_id/reports
+Attempts to add a report to a user. Same as above
+
+### /comments/:comment_id/reports
+Attempts to add a report to a comment. Same as above
+
 
 
 ## Tables
