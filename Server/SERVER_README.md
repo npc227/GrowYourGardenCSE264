@@ -18,8 +18,26 @@ When you obtain attachments that way, they will be sorted by which one was creat
 * @google-cloud/storage (for... cloud storage..)
 * multer (middleware for cloud storage)
 * bcrypt (so that we don't store *unhashed* passwords in our database...)
+* node-cache
+* jsonwebtoken
+
+### ALL OF THESE ROUTES EXCEPT FOR LOGIN / LOGOUT / CREATE USER REQUIRE AUTHORIZATION HEADER!
+**HEADER FORMAT:**
+authorization -> Bearer [TOKEN]
 
 # Routes
+## ACCESS ROUTES
+### /login
+Attempts to login a user and add them to the session. Requires matching username and password
+*Example JSON*
+{
+    'username':'some_username'
+    'password':'some_password'
+}
+
+### /logout
+Attempts to logout a user with the token provided in the authorization header
+
 ## GET ROUTES
 ### /users
 Returns all users in the database, except users whose IDs are negative (test and admin accounts)
@@ -54,7 +72,7 @@ Returns all comments on the specified post
 
 ## POST ROUTES
 ### /users
-Adds a user to the database and returns the user created and a little message
+Adds a user to the database and returns the user created and a message with user id. The user will have to login after maing their account.
 *EXAMPLE JSON:*
 `{
     "username":"creative_username",

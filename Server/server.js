@@ -5,7 +5,7 @@ import 'dotenv/config' //This will pull in the .env file
 
 import { query } from './util/postgres.js'
 import { uploadMulter, uploadGCS } from './util/cloudstorage.js'
-import { hashPassword, comparePass } from './util/authentication.js'
+import { hashPassword, comparePass, authenticateToken, loginUser, logoutUser } from './util/authentication.js'
 
 const DB_PORT = process.env.DB_PORT
 // these are the three report types
@@ -172,6 +172,41 @@ app.get('/posts/:post_id/comments', (req, res) => {
 })
 
 /** POST ROUTES */
+app.post('/login', async (req, res) => {
+    const body = req.body
+    const username = body["username"] || null; const password = body["password"] || null;
+    if (!username || ! password) {
+        res.status(400).json("Missing required fields")
+    }
+
+    const qs = `SELECT * FROM users WHERE username=$1`
+    const params = [username]
+    let data = await query(qs, params)
+    data = data.rows[0] //usernames are unique so we should only get one
+    if (comparePass(password, data["hashed_password"])) {
+        const token = loginUser(data["id"])
+        res.json(token)
+    } else {
+        res.status(401).json("No match for given username and password")
+    }
+})
+
+// logs a user out by removing their token
+app.post('/logout', async (req, res) => {
+    const aHeader = req.headers['authorization']
+    const token = aHeader && aHeader.split(' ')[1]
+
+    if (!token) {
+        res.status(400).json("No token given to logout")
+    }
+
+    const r_count = logoutUser(token)
+    if (r_count > 0) {
+        res.json(`Successfully logged out token: ${token}`)
+    } else {
+        res.json(`Token already logged out`)
+    }
+})
 
 // create a new user with desired fields, note that a user cannot be created with the same email as another user
 app.post('/users', async (req, res) => {
@@ -208,7 +243,7 @@ app.post('/users', async (req, res) => {
 })
 
 // this route is mainly for testing purposes and would likely be removed from (or otherwise disabled on) a real release branch
-app.post('/upload_file', uploadMulter.single("image"), async (req, res) => {
+app.post('/upload_file', authenticateToken, uploadMulter.single("image"), async (req, res) => {
     if (!req.file) {
         return res.status(400).send("No file found")
     }
@@ -227,7 +262,7 @@ app.post('/upload_file', uploadMulter.single("image"), async (req, res) => {
 })
 
 // create a new post with desired fields. Note that user ID must be a valid user
-app.post('/posts', uploadMulter.single("image"), async (req, res) => {
+app.post('/posts', authenticateToken, uploadMulter.single("image"), async (req, res) => {
     const file = req.file; let publicUrl = null;
     if (file) {
         console.log("Recieved image: " + file.originalname)
@@ -236,7 +271,7 @@ app.post('/posts', uploadMulter.single("image"), async (req, res) => {
 
     const body = req.body
 
-    const user_id = body["user_id"] || null
+    const user_id = req.user_id || null
     let username = await query(`SELECT username FROM users WHERE id=${user_id}`)
     username = username.rows[0]["username"]
 
@@ -247,16 +282,16 @@ app.post('/posts', uploadMulter.single("image"), async (req, res) => {
     const qs = `INSERT INTO Posts (user_id, username, text_content, title, image) VALUES ($1, $2, $3, $4, $5)`
 
     try {
-        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts under user ${body.user_id}`)})
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts under user ${user_id}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
 })
 
 // create a new comment with the desired fields. Note that user and post ids must be valid
-app.post('/posts/:post_id/comments', async (req, res) => {
+app.post('/posts/:post_id/comments', authenticateToken, async (req, res) => {
     const body = req.body
-    const user_id = body["user_id"] || null; const post_id = req.params.post_id;
+    const user_id = req.user_id || null; const post_id = req.params.post_id;
     const text_content = body["text_content"] || null
     const reports = 0; const likes = 0;
 
@@ -278,9 +313,9 @@ app.post('/posts/:post_id/comments', async (req, res) => {
 })
 
 // create a new report on a user
-app.post('/users/:id/reports', async (req, res) => {
+app.post('/users/:id/reports', authenticateToken, async (req, res) => {
     const body = req.body;
-    const user_id = body["user_id"] || null; const reported_user_id = req.params.id
+    const user_id = req.user_id || null; const reported_user_id = req.params.id
     const text_content = body["text_content"] || null
     const type = USER_REPORT
 
@@ -302,9 +337,9 @@ app.post('/users/:id/reports', async (req, res) => {
 })
 
 // create a new report on a post
-app.post('/posts/:id/reports', async (req, res) => {
+app.post('/posts/:id/reports', authenticateToken, async (req, res) => {
     const body = req.body;
-    const user_id = body["user_id"] || null; const post_id = req.params.id
+    const user_id = req.user_id || null; const post_id = req.params.id
     const text_content = body["text_content"] || null
     const type = POST_REPORT
 
@@ -326,9 +361,9 @@ app.post('/posts/:id/reports', async (req, res) => {
 })
 
 // create a new report on a comment
-app.post('/comments/:id/reports', async (req, res) => {
+app.post('/comments/:id/reports', authenticateToken,  async (req, res) => {
     const body = req.body;
-    const user_id = body["user_id"] || null; const comment_id = req.params.id
+    const user_id = req.user_id || null; const comment_id = req.params.id
     const text_content = body["text_content"] || null
     const type = COMMENT_REPORT
 
@@ -352,9 +387,10 @@ app.post('/comments/:id/reports', async (req, res) => {
 /** PUT ROUTES */
 
 // update a user
-app.put('/users/:id', (req, res) => {
+app.put('/users/:id', authenticateToken, (req, res) => {
     const body = req.body
     const id = req.params.id
+    const user_id = req.user_id
 
     const username = body["username"] || null
     const first_name = body["first_name"] || null
@@ -381,9 +417,10 @@ app.put('/users/:id', (req, res) => {
 })
 
 // edit an existing post. Note that you can only change the title and text content through this method. Anything else requires admin console or alternative command
-app.put('/posts/:id', (req, res) => {
+app.put('/posts/:id', authenticateToken, (req, res) => {
     const body = req.body
     const id = req.params.id
+    const user_id = req.user_id
 
     const text_content = body["text_content"] || null
     const title = body["title"] || null
@@ -399,10 +436,11 @@ app.put('/posts/:id', (req, res) => {
 })
 
 // edit an existing comment
-app.put('/posts/:post_id/comments/:comment_id', (req, res) => {
+app.put('/posts/:post_id/comments/:comment_id', authenticateToken,  (req, res) => {
     const body = req.body
     const post_id = req.params.post_id
     const comment_id = req.params.comment_id
+    const user_id = req.user_id
     
     const text_content = body["text_content"] || null
 
@@ -418,8 +456,9 @@ app.put('/posts/:post_id/comments/:comment_id', (req, res) => {
 /** DELETE ROUTES */
 
 // delete a user
-app.delete('/users/:id', (req, res) => {
+app.delete('/users/:id', authenticateToken, (req, res) => {
     const id = req.params.id
+    const user_id = req.user_id
     
     const qs = `DELETE from Users where id=$1`
     const params = [id]
@@ -431,8 +470,9 @@ app.delete('/users/:id', (req, res) => {
 })
 
 // delete a post
-app.delete('/posts/:id', (req, res) => {
+app.delete('/posts/:id', authenticateToken, (req, res) => {
     const id = req.params.id
+    const user_id = req.user_id
     
     const qs = `DELETE from Posts WHERE id=$1`
     const params = [id]
@@ -444,8 +484,9 @@ app.delete('/posts/:id', (req, res) => {
 })
 
 // delete a comment
-app.delete('/comments/:id', (req, res) => {
+app.delete('/comments/:id', authenticateToken, (req, res) => {
     const id = req.params.id
+    const user_id = req.user_id
 
     const qs = `DELETE FROM comments WHERE id=$1`
     const params = [id]
@@ -457,8 +498,9 @@ app.delete('/comments/:id', (req, res) => {
 })
 
 // delete a comment with a specific post id and comment id (kind of unnecessary but it is consistent with how comments are obtained.. so)
-app.delete('/posts/:post_id/comments/:comment_id', (req, res) => {
+app.delete('/posts/:post_id/comments/:comment_id', authenticateToken, (req, res) => {
     const post_id = req.params.post_id; const comment_id = req.params.comment_id
+    const user_id = req.user_id
 
     const qs = `DELETE FROM comments WHERE id=$1 AND post_id=$2`
     const params = [comment_id, post_id]
@@ -479,10 +521,10 @@ app.delete('/posts/:post_id/comments/:comment_id', (req, res) => {
  * User has liked post previously, clicks button again -> removes user like
  * User has disliked post previously, clicks like button -> removes user dislike, adds user like
  */
-app.put('/posts/:post_id/like', async (req, res) => {
+app.put('/posts/:post_id/like', authenticateToken, async (req, res) => {
     const body = req.body
 
-    const user_id = body["user_id"]
+    const user_id = req.user_id
     const post_id = req.params.post_id;
 
     const initial_query = `SELECT * FROM post_likes WHERE user_id=$1 AND post_id=$2`
@@ -524,10 +566,10 @@ app.put('/posts/:post_id/like', async (req, res) => {
  * User has disliked post previously, clicks button again -> removes user dislike
  * User has disliked post previously, clicks like button -> removes user dislike, adds user like
  */
-app.put('/posts/:post_id/dislike', async (req, res) => {
+app.put('/posts/:post_id/dislike', authenticateToken, async (req, res) => {
     const body = req.body
 
-    const user_id = body["user_id"]
+    const user_id = req.user_id
     const post_id = req.params.post_id;
 
     const initial_query = `SELECT * FROM post_likes WHERE user_id=$1 AND post_id=$2`
@@ -569,11 +611,10 @@ app.put('/posts/:post_id/dislike', async (req, res) => {
  * User has liked comment previously, clicks button again -> removes user like
  * User has disliked comment previously, clicks like button -> removes user dislike, adds user like
  */
-app.put('/posts/:post_id/comments/:comment_id/like', async (req, res) => {
+app.put('/posts/:post_id/comments/:comment_id/like', authenticateToken, async (req, res) => {
     const body = req.body
 
-    const user_id = body["user_id"]
-    const post_id = req.params.post_id;
+    const user_id = req.user_id
     const comment_id = req.params.comment_id;
 
     const initial_query = `SELECT * FROM comment_likes WHERE user_id=$1 AND comment_id=$2`
@@ -615,11 +656,10 @@ app.put('/posts/:post_id/comments/:comment_id/like', async (req, res) => {
  * User has disliked comment previously, clicks button again -> removes user dislike
  * User has liked comment previously, clicks like button -> removes user like, adds user dislike
  */
-app.put('/posts/:post_id/comments/:comment_id/dislike', async (req, res) => {
+app.put('/posts/:post_id/comments/:comment_id/dislike', authenticateToken, async (req, res) => {
     const body = req.body
 
-    const user_id = body["user_id"]
-    const post_id = req.params.post_id;
+    const user_id = req.user_id
     const comment_id = req.params.comment_id;
 
     const initial_query = `SELECT * FROM comment_likes WHERE user_id=$1 AND comment_id=$2`
