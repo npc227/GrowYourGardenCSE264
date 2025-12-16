@@ -4,6 +4,9 @@ import cors from 'cors'
 
 import 'dotenv/config' //This will pull in the .env file
 
+// importing bcrypt to hash passwords
+import bcrypt from 'bcrypt'
+
 // import readline so I can do command line interaction
 import readline from 'node:readline'
 
@@ -48,6 +51,19 @@ function once(fn, context) {
     };
 }
 
+// SALT_ROUNDS is a constant used for password hashing
+const SALT_ROUNDS = 10
+// hashes a password using bcrypt and returns the hash
+export async function hashPassword(raw_pass) {
+    try {
+        const hash_pass = await bcrypt.hash(raw_pass, SALT_ROUNDS)
+        return hash_pass
+    } catch (error) {
+        console.error("Error hashing password: " + error.message)
+        throw new Error("Hashing failed") //critical error.. we do *not* want hashing to fail so it should stop the user creation process
+    }
+}
+
 const firstSelection = 0
 
 let main 
@@ -68,6 +84,9 @@ let main
                             const setbiography = await askQuestion(`\n\tBiography: `)
                             const setreports = await askQuestion(`\n\tReports: `)
                             const setdisplay_name = await askQuestion(`\n\tDisplay name: `)
+                            // NOTE: raw passcode entered by admin must be hashed before put in database
+                            const raw_password = await askQuestion(`\n\tPassword: `)
+                            
 
                             // params should be data gotten above by questions asked
                             const username = setusername || null
@@ -78,16 +97,21 @@ let main
                             const biography = setbiography || null
                             const reports = setreports || 0
                             const display_name = setdisplay_name || first_name + ' ' + last_name || null
+                            const hashed_password = await hashPassword(raw_password) || null
                         
-                            if (role > 2) {
-                                console.log("Invalid role given.")
+                            if (!username || !first_name || !last_name || !email || !raw_password) {
+                                throw new Error("Missing one or more required fields.")
+                            }
+                            
+                            if (role > 2 || role < -1) {
+                                throw new Error("Invalid role given.")
                             }
                         
-                            const params = [username, first_name, last_name, email, role, biography, reports, display_name]
+                            const params = [username, first_name, last_name, email, role, biography, reports, display_name, hashed_password]
                         
                             const qs = `INSERT INTO Users 
-                                        (username, first_name, last_name, email, role, biography, reports, display_name)
-                                        values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+                                        (username, first_name, last_name, email, role, biography, reports, display_name, hashed_password)
+                                        values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
                         
                             try {
                                 query(qs, params).then(data => {console.log({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})})
@@ -124,6 +148,8 @@ let main
                             const setbiography = await askQuestion(`\n\tBiography: `)
                             const setreports = await askQuestion(`\n\tReports: `)
                             const setdisplay_name = await askQuestion(`\n\tDisplay name: `)
+                            // NOTE: raw passcode entered by admin must be hashed before put in database
+                            const raw_password = await askQuestion(`\n\tPassword: `)
                             
                             
                             const username = setusername || user[0].username
@@ -134,15 +160,16 @@ let main
                             const biography = setbiography || user[0].biography
                             const reports = setreports || user[0].reports
                             const display_name = setdisplay_name || user[0].display_name
+                            const hashed_password = await hashPassword(raw_password) || user[0].hashed_password
                             const id = user[0].id
                         
-                            if (role > 2) {
-                                console.log("Invalid role given.")
+                            if (role > 2 || role < -1) {
+                                throw new Error("Invalid role given.")
                             }
                         
-                            const params = [username, first_name, last_name, email, role, biography, reports, display_name, id]
+                            const params = [username, first_name, last_name, email, role, biography, reports, display_name, hashed_password, id]
                         
-                            const qs = `UPDATE Users set username=$1, first_name = $2, last_name=$3, email=$4, role=$5, biography=$6, reports=$7, display_name=$8 WHERE id=$9`
+                            const qs = `UPDATE Users set username=$1, first_name = $2, last_name=$3, email=$4, role=$5, biography=$6, reports=$7, display_name=$8, hashed_password=$9 WHERE id=$10`
                         
                             try {
                                 query(qs, params).then(data => {console.log(`Number of users updated:${data.rowCount}`)})
@@ -371,7 +398,7 @@ let main
                             console.log("Wrong number Admin, please try again later.")
                         }
                 } else if (firstSelection == 4) {
-                    const reportsSelection = await askQuestion(`Reports options:\n\t1. Sort users by number of reports (most to least)\n\t2. Sort posts by number of reports (most to least)\n`);
+                    const reportsSelection = await askQuestion(`Reports options:\n\t1. Sort users by number of reports (most to least)\n\t2. Sort posts by number of reports (most to least)\n\t3. Get reports\n\t4. Delete a report\n`);
                     if (reportsSelection == 1) {
                         const qs = `SELECT * FROM Users ORDER BY reports DESC`
                         try {
@@ -394,6 +421,63 @@ let main
                         } catch (error) {
                             console.log(error.message)
                         }
+                    } else if (reportsSelection == 3) {
+                        console.log("Get report(s)")
+                        const usersOrPosts = await askQuestion(`Get options:\n\t1. Get all reports\n\t2. Get reports for a specific user\n\t3. Get reports for a specific post\n`)
+                        if (usersOrPosts == 1) {
+                            const qs = `SELECT * FROM Reports`
+                            try {
+                                query(qs).then(data => {
+                                    for (let i = 0; i < data.rowCount; i++) {
+                                        console.log(data.rows[i])
+                                    }
+                                })
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                        } else if (usersOrPosts == 2) {
+                            const id = await askQuestion(`Please enter the id of the user you would like to get the reports for: `)
+                            const qs = `SELECT * FROM Reports WHERE target_id=$1`
+                            const params = [id]
+                            try {
+                                query(qs, params).then(data => {
+                                    for (let i = 0; i < data.rowCount; i++) {
+                                        console.log(data.rows[i])
+                                    }
+                                })
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                        } else if (usersOrPosts == 3) {
+                            const id = await askQuestion(`Please enter the id of the post you would like to get the reports for: `)
+                            const qs = `SELECT * FROM Reports WHERE target_id=$1`
+                            const params = [id]
+                            try {
+                                query(qs, params).then(data => {
+                                    for (let i = 0; i < data.rowCount; i++) {
+                                        console.log(data.rows[i])
+                                    }
+                                })
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                        } else {
+                            console.log("Not a get option, please try again later.")
+                        }
+                    } else if (reportsSelection == 4) {
+                        console.log('Delete report')
+                        const id = await askQuestion(`Please enter the id of the report you would like to delete: `)
+                        const params = [id]
+                        
+                        const qs = `DELETE from Reports WHERE id=$1`
+                    
+                        try {
+                            query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
+                        } catch (error) {
+                            console.log(error.message)
+                        }
+                    } else {
+                        console.log("Wrong number Admin, please try again later.")
                     }
                 } else if (firstSelection == 5) {
                     console.log("Goodbye")
