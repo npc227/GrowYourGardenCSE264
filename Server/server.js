@@ -2,9 +2,11 @@ import express from 'express'
 import cors from 'cors'
 
 import 'dotenv/config' //This will pull in the .env file
+import './util/cloudstorage.js'
 
 
 import { query } from './util/postgres.js'
+import { uploadMulter, uploadGCS } from './util/cloudstorage.js'
 
 const DB_PORT = process.env.DB_PORT
 // these are the three report types
@@ -190,6 +192,24 @@ app.post('/users', (req, res) => {
     }
 })
 
+app.post('/post/upload_file', uploadMulter.single("image"), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).send("No file found")
+    }
+
+    try {
+        const publicUrl = await uploadGCS(req.file)
+
+        res.status(200).send({
+            message: "File uploaded successfully!",
+            url: publicUrl
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Unable to upload file to cloud storage')
+    }
+})
+
 // create a new post with desired fields. Note that user ID must be a valid user
 app.post('/posts', async (req, res) => {
     const body = req.body
@@ -285,7 +305,7 @@ app.post('/posts/:id/reports', async (req, res) => {
 
 })
 
-// create a new report on a post
+// create a new report on a comment
 app.post('/comments/:id/reports', async (req, res) => {
     const body = req.body;
     const user_id = body["user_id"] || null; const comment_id = req.params.id

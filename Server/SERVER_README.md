@@ -9,6 +9,13 @@ Attachments (photos) are not given when searching by post. This is because they 
 That separate table has all attachments inside of it, and you can obtain all attachments for a certain post using a specific route.
 When you obtain attachments that way, they will be sorted by which one was created first. You may want to use this to your advantage somehow, not sure.
 
+# Packages Used:
+* postgres / pg
+* dotenv
+* cors
+* nodemon
+* @google-cloud/storage multer (new library! google cloud..)
+
 # Routes
 ## GET ROUTES
 ### /users
