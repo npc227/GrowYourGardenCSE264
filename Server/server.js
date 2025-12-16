@@ -192,7 +192,8 @@ app.post('/users', (req, res) => {
     }
 })
 
-app.post('/post/upload_file', uploadMulter.single("image"), async (req, res) => {
+// this route is mainly for testing purposes and would likely be removed from (or otherwise disabled on) a real release branch
+app.post('/upload_file', uploadMulter.single("image"), async (req, res) => {
     if (!req.file) {
         return res.status(400).send("No file found")
     }
@@ -211,7 +212,13 @@ app.post('/post/upload_file', uploadMulter.single("image"), async (req, res) => 
 })
 
 // create a new post with desired fields. Note that user ID must be a valid user
-app.post('/posts', async (req, res) => {
+app.post('/posts', uploadMulter.single("image"), async (req, res) => {
+    const file = req.file; let publicUrl = null;
+    if (file) {
+        console.log("Recieved image: " + file.originalname)
+        publicUrl = await uploadGCS(file)
+    }
+
     const body = req.body
 
     const user_id = body["user_id"] || null
@@ -221,10 +228,8 @@ app.post('/posts', async (req, res) => {
     const text_content = body["text_content"] || null
     const title = body["title"] || null
 
-    const reports = 0; const likes = 0; //no likes or reports by default... obviously...
-
-    const params = [user_id, username, text_content, title, reports, likes]
-    const qs = `INSERT INTO Posts (user_id, username, text_content, title, reports, likes) VALUES ($1, $2, $3, $4, $5, $6)`
+    const params = [user_id, username, text_content, title, publicUrl]
+    const qs = `INSERT INTO Posts (user_id, username, text_content, title, image) VALUES ($1, $2, $3, $4, $5)`
 
     try {
         query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts under user ${body.user_id}`)})

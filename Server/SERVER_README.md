@@ -72,12 +72,14 @@ Adds a user to the database and returns the user created and a little message
 
 ### /posts
 Adds a post to the database. Only works if a valid user id is given
-*EXAMPLE JSON*
-`{
-    "user_id":-1, 
-    "title":"A cool post made by an admin",
-    "text_content":"Some cool text content"
-}`
+*MULTIPART FORMAT*
+**Format: Key -> Pair**
+image -> (file)
+user_id -> 2
+text_content -> something witty
+title -> fun title
+
+
 
 ### /posts/:post_id/comments
 Adds a comment to the database under the post with id = post_id. Both the user id given in the body and the post id given in the request must be valid.
@@ -190,12 +192,6 @@ id, user_id, post_id, username
 created_at,
 text_content,
 reports (# of times comment has been reported)
-
-### Attachments
-Fields:
-id, user_id, post_id,
-created_at,
-attachment_link
 
 ### Reports
 Fields:
