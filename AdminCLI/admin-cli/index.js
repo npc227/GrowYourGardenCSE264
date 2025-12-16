@@ -221,6 +221,7 @@ let main
                             try {
                                 post = await query(qs0, params0)
                                 post = post.rows
+                                console.log(post)
                             } catch (error) {
                                 console.log(error.message)
                             }
@@ -302,6 +303,7 @@ let main
                             try {
                                 comment = await query(qs0, params0)
                                 comment = comment.rows
+                                console.log(comment)
                             } catch (error) {
                                 console.log(error.message)
                             }
@@ -369,9 +371,30 @@ let main
                             console.log("Wrong number Admin, please try again later.")
                         }
                 } else if (firstSelection == 4) {
-                    console.log("Reports options:")
-                    const reportsSelection = await askQuestion(`Reports options:\n\t1. Sort users by number of reports\n\t2. Sort posts by number of reports\n`);
-                    
+                    const reportsSelection = await askQuestion(`Reports options:\n\t1. Sort users by number of reports (most to least)\n\t2. Sort posts by number of reports (most to least)\n`);
+                    if (reportsSelection == 1) {
+                        const qs = `SELECT * FROM Users ORDER BY reports DESC`
+                        try {
+                            query(qs).then(data => {
+                                for (let i = 0; i < data.rowCount; i++) {
+                                    console.log(data.rows[i])
+                                }
+                            })
+                        } catch (error) {
+                            console.log(error.message)
+                        }
+                    } else if (reportsSelection == 2) {
+                        const qs = `SELECT * FROM Posts ORDER BY reports DESC`
+                        try {
+                            query(qs).then(data => {
+                                for (let i = 0; i < data.rowCount; i++) {
+                                    console.log(data.rows[i])
+                                }
+                            })
+                        } catch (error) {
+                            console.log(error.message)
+                        }
+                    }
                 } else if (firstSelection == 5) {
                     console.log("Goodbye")
                     return;
