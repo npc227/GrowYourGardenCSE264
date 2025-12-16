@@ -14,7 +14,10 @@ When you obtain attachments that way, they will be sorted by which one was creat
 * dotenv
 * cors
 * nodemon
-* @google-cloud/storage multer (new library! google cloud..)
+**New Libraries**
+* @google-cloud/storage (for... cloud storage..)
+* multer (middleware for cloud storage)
+* bcrypt (so that we don't store *unhashed* passwords in our database...)
 
 # Routes
 ## GET ROUTES
@@ -61,7 +64,7 @@ Adds a user to the database and returns the user created and a little message
     "role":0, //MUST BE -1, 0, 1 OR 2
     "display_name":"optionally something different",
     "biography":"optional biography",
-    "reports":0 //I would recommend not setting this since it is how many reports a user has recieved
+    "password":"somethingSecure"
 }`
 
 *EXAMPLE RESPONSE:*

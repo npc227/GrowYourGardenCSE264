@@ -2,11 +2,10 @@ import express from 'express'
 import cors from 'cors'
 
 import 'dotenv/config' //This will pull in the .env file
-import './util/cloudstorage.js'
-
 
 import { query } from './util/postgres.js'
 import { uploadMulter, uploadGCS } from './util/cloudstorage.js'
+import { hashPassword, comparePass } from './util/authentication.js'
 
 const DB_PORT = process.env.DB_PORT
 // these are the three report types
@@ -32,10 +31,14 @@ app.get('/', (_req, res) => {
 })
 
 // get all users excluding test and admin accounts (whose ids are less than 0)
-app.get('/users', (req, res) => {
+app.get('/users', (_req, res) => {
     const qs = `SELECT * FROM Users WHERE id>0`
     try {
-        query(qs).then(data => {res.json(data.rows)})
+        query(qs).then(data => {
+            const filteredUsers = data.rows.map(row => { //we have to remove the hashed passwords from the data..
+                const { hashed_password, ...safeUser} = row
+                return safeUser});
+            res.json(filteredUsers)})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -52,7 +55,11 @@ app.get('/users/query', (req, res) => {
     const params = [target]
 
     try {
-        query(qs, params).then(data => {res.json(data.rows)})
+        query(qs, params).then(data => {
+            const filteredUsers = data.rows.map(row => { //we have to remove the hashed passwords from the data..
+                const { hashed_password, ...safeUser} = row
+                return safeUser});
+            res.json(filteredUsers)})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -63,7 +70,11 @@ app.get('/users/:id', (req, res) => {
     const qs = `SELECT * FROM Users WHERE id=$1`
     const params = [req.params.id]
     try {
-        query(qs, params).then(data => {res.json(data.rows)})
+        query(qs, params).then(data => {
+            const filteredUsers = data.rows.map(row => { //we have to remove the hashed passwords from the data..
+                const { hashed_password, ...safeUser} = row
+                return safeUser});
+            res.json(filteredUsers)})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -163,7 +174,7 @@ app.get('/posts/:post_id/comments', (req, res) => {
 /** POST ROUTES */
 
 // create a new user with desired fields, note that a user cannot be created with the same email as another user
-app.post('/users', (req, res) => {
+app.post('/users', async (req, res) => {
     const body = req.body
 
     const username = body["username"] || null
@@ -172,17 +183,21 @@ app.post('/users', (req, res) => {
     const email = body["email"] || null
     const role = body["role"] || 0
     const biography = body["biography"] || null
-    const reports = body["reports"] || 0
     const display_name = body["display_name"] || first_name + ' ' + last_name || null
+    const password = await hashPassword(body["password"]) || null
 
-    if (role > 2) {
+    if (!username || !first_name || !last_name || !email || !password) {
+        res.status(400).json("Missing one or more required fields.")
+    }
+
+    if (role > 2 || role < -1) {
         res.status(400).json("Invalid role given.")
     }
 
-    const params = [username, first_name, last_name, email, role, biography, reports, display_name]
+    const params = [username, first_name, last_name, email, role, biography, display_name, password]
 
     const qs = `INSERT INTO Users 
-                (username, first_name, last_name, email, role, biography, reports, display_name)
+                (username, first_name, last_name, email, role, biography, display_name, hashed_password)
                 values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
     try {
