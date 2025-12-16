@@ -27,7 +27,7 @@ const rl = readline.createInterface({
 
 const askQuestion = (question) => {
     try {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
                 rl.question(question, (answer) => {
                         resolve(answer)
                 });
