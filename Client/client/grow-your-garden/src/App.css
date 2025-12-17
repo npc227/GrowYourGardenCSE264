@@ -76,6 +76,13 @@ body {
 
 }
 
+.interactions {
+  align-self: center;
+  width: 200px;
+  display: flex;
+  justify-content: space-between;
+}
+
 #seedImg {
 
   width: 67px;
@@ -83,6 +90,16 @@ body {
   align-self: center;
   margin-top: 3.67em;
   margin-bottom: 1.67em;
+
+}
+
+#createAcc {
+
+  position: relative;
+  width: 300px;
+  height: auto;
+  margin-top: 3.67em;
+  bottom: -10px;
 
 }
 

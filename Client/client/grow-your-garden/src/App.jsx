@@ -4,8 +4,9 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-//styling: navbar styling and logo image
+//styling: navbar styling and logo image, create acc icon
 import logoImg from './assets/gyglogo.png'
+import createAcc from './assets/tempart/gygcreateacc.png'
 import './components/NavBar.css'
 
 //note: postModal adapted from my job application tracjer project
@@ -20,8 +21,9 @@ import TI5 from './assets/tempart/pup.jpg'
 import TI6 from './assets/tempart/apple.jpg'
 import TI7 from './assets/tempart/firdge.jpg'
 
-//and seed logo
+//and seed, watering can imgs
 import watercan from './assets/tempart/watercan.png'
+import gygseed from './assets/tempart/gygseed.png'
 
 function App() {
   //const [count, setCount] = useState(0)
@@ -135,17 +137,35 @@ function App() {
       {/*Seperate from navbar: main body of page. keep all elements column aligned in the center*/}
       <section class={'pageElements'}>
 
-        <img src={watercan} id={'seedImg'} onClick={ () => {
+        <div class={'interactions'}>
 
-          //create copy of posts for shuffle
-          //so it doesn't give a reference
-          let tempArr = [...posts]
-          console.log(tempArr)
-          setPosts(shufflePosts(tempArr))
-          console.log(posts)
-            
-          }
+          {/*Watering can "refreshes" posts*/}
+          <img src={watercan} id={'seedImg'} onClick={ () => {
+
+            //create copy of posts for shuffle
+            //so it doesn't give a reference
+            let tempArr = [...posts]
+            console.log(tempArr)
+            setPosts(shufflePosts(tempArr))
+            console.log(posts)
+              
+            }
           }></img>
+
+          {/*Seed will allow a logged in user to make a post*/}
+          <img src={gygseed} id={'seedImg'} onClick={ () => {
+
+            //create copy of posts for shuffle
+            //so it doesn't give a reference
+            let tempArr = [...posts]
+            console.log(tempArr)
+            setPosts(shufflePosts(tempArr))
+            console.log(posts)
+              
+            }
+          }></img>
+
+        </div>
 
         {/*Posts displayed in a grid: currently, 2x2. Responsiveness, change to 1x4 stack upon window shrink*/}
         <div class={'postGrid'}>
@@ -171,6 +191,23 @@ function App() {
           }></img>
           
         </div>
+
+      </section>
+
+      {/*Footer/Info for bottom of page*/}
+      <section class={'footer'}>
+
+        <img src={createAcc} id={'createAcc'} onClick={ () => {
+
+          //create copy of posts for shuffle
+          //so it doesn't give a reference
+          let tempArr = [...posts]
+          console.log(tempArr)
+          setPosts(shufflePosts(tempArr))
+          console.log(posts)
+            
+          }
+          }></img>
 
       </section>
 
