@@ -11,6 +11,7 @@ import bcrypt from 'bcrypt'
 import readline from 'node:readline'
 
 import { query } from './util/postgres.js'
+import { exit } from 'node:process'
 
 const DB_PORT = process.env.DB_PORT
 
@@ -487,7 +488,8 @@ let main
                         let report = null
                         try {
                             report = await query(qs0, params)
-                            report = post.rows
+                            report = report.rows
+                            console.log(report)
                         } catch (error) {
                             console.log(error.message)
                         }
@@ -512,7 +514,7 @@ let main
                     }
                 } else if (firstSelection == 5) {
                     console.log("Goodbye")
-                    return;
+                    exit(0);
                 } else {
                     if (firstSelection != 5) {
                         console.log("Wrong number Admin, please try again later.")
