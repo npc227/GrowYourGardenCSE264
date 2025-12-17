@@ -59,13 +59,17 @@ function App() {
   //useffect for checking api status and running getPosts
   useEffect(() => {
 
-    fetch('http://localhost:3000/up')
-    .then(res => res.json())
-    .then(result => {
-      console.log(result.status)
+    //"dynamically" refresh posts after shuffle
+    const fetchPosts = async() => {
+      fetch('http://localhost:3000/up')
+      .then(res => res.json())
+      .then(result => {
+        console.log(result.status)
 
-    })
-    getPosts()
+      })
+      await getPosts()
+    }
+    fetchPosts()
 
   }, [])
 
@@ -80,6 +84,7 @@ function App() {
     //the demonstration here: https://www.geeksforgeeks.org/dsa/shuffle-a-given-array-using-fisher-yates-shuffle-algorithm/
     for (let i = postArr.length - 1; i > 0; i--){
       console.log("enter shuffle iteration" + i)
+      console.log(postArr[i])
       
       //pick a random index with a value from 0 to length of posts - 1
       //(aka: all possible indexes, since start at 0)
@@ -112,22 +117,22 @@ function App() {
 
         {/*Posts displayed in a grid: currently, 2x2. Responsiveness, change to 1x4 stack upon window shrink*/}
         <div class={'postGrid'}>
-          <img src={TI1} onClick={ () => {
+          <img src={posts[0].image} onClick={ () => {
             setSelPost(posts[0])
             setPostModalOpen(true)
           }
           }></img>
-          <img src={TI4} onClick={ () =>{
+          <img src={posts[1].image} onClick={ () =>{
             setSelPost(posts[1])
             setPostModalOpen(true)
           }
           }></img>
-          <img src={TI6} onClick={ () =>{
+          <img src={posts[2].image} onClick={ () =>{
             setSelPost(posts[2])
             setPostModalOpen(true)
           }
           }></img>
-          <img src={TI7} onClick={ () =>{
+          <img src={posts[3].image} onClick={ () =>{
             setSelPost(posts[3])
             setPostModalOpen(true)
           }
