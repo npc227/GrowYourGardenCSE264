@@ -31,12 +31,15 @@ function App() {
   const [posts, setPosts] = useState([])
   const [PostModalOpen, setPostModalOpen] = useState(false)
   const [selectedPost, setSelPost] = useState()
+
+  //keep track of loading
+  const [loading, setLoading] = useState(true)
   
   //get posts to be used when something is posted
   //nts:: add randomizer in here!!! can reactivate whenever seed packet clicked
   //accurate updates of content
   const getPosts = async() => {
-    fetch('http://localhost:3000/posts', {
+    let data = await fetch('http://localhost:3000/posts', {
       method: 'GET',
     })
     .then(res => {
@@ -45,11 +48,11 @@ function App() {
       }
       return res.json()
     })
-    .then(resData => {
-      console.log(resData)
+    .then(data => {
+      console.log(data)
 
       //shuffle the JSON data before putting it in posts
-      setPosts(shufflePosts(resData))
+      setPosts(data)
       console.log(posts)
 
     })
@@ -68,10 +71,21 @@ function App() {
 
       })
       await getPosts()
-    }
+      setLoading(false)
+    } 
     fetchPosts()
 
+    //check to see if posts changed/shuffled
   }, [])
+
+  //if it is loading, return div
+  if (loading) {
+    return (
+      <div>
+        LOADING...
+      </div>
+    )
+  }
 
   //post randomizer
   //post grid will auto pull first 4 posts, so shuffling all is a simpler algoritm
@@ -91,7 +105,7 @@ function App() {
       let j = Math.floor(Math.random() * (i + 1)); 
 
       //swap element at posts[i] with the element at posts[j]
-      [postArr[i], postArr[j]] = [postArr[j], postArr[i]];
+      [postArr[i], postArr[j]] = [postArr[j], postArr[i]]
     } 
     return postArr
 
@@ -107,7 +121,9 @@ function App() {
 
         <img src={watercan} id={'seedImg'} onClick={ () => {
 
-          let tempArr = posts
+          //create copy of posts for shuffle
+          //so it doesn't give a reference
+          let tempArr = [...posts]
           console.log(tempArr)
           setPosts(shufflePosts(tempArr))
           console.log(posts)
