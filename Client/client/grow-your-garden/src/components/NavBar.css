@@ -48,7 +48,7 @@ used adobe illustrator to make vector logo for easier scaling*/
 
 /*temp placeholder - will likely add modals for login/profile display*/
 .links {
-    min-width: 200px;
+    min-width: 220px;
     margin-right: 5%;
     display: flex;
     flex-direction: row;

@@ -4,9 +4,9 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-/*Custom components! (and modal)
-NavBar - contains logo, login, profile*/
-import NavBar from './components/NavBar'
+//styling: navbar styling and logo image
+import logoImg from './assets/gyglogo.png'
+import './components/NavBar.css'
 
 //note: postModal adapted from my job application tracjer project
 import PostModal from './components/PostModal'
@@ -113,8 +113,24 @@ function App() {
 
   return (
     <>
-      {/*render NavBar in the App*/}
-      <NavBar />
+      {/*Nav container*/}
+      <nav class={'nav'}>
+
+        {/*logo*/}
+        <img src={logoImg} class={'logo'}></img>
+
+        {/*temp placeholders -- replace with modals for login/profile*/}
+        <div class={'links'}>
+            <h3>Log In / Out</h3>
+            <h3 /*onClick={ () =>{
+              setSelProf(selProf)
+              setProfModalOpen(true)
+            }
+          }*/>Profile</h3>
+        </div>
+
+      </nav>
+      
 
       {/*Seperate from navbar: main body of page. keep all elements column aligned in the center*/}
       <section class={'pageElements'}>
