@@ -54,7 +54,7 @@ const NavBar = () => {
 
         {/*temp placeholders -- replace with modals for login/profile*/}
         <div class={'links'}>
-            <h3>Log In</h3>
+            <h3>Log In / Out</h3>
             <h3 /*onClick={ () =>{
               setSelProf(selProf)
               setProfModalOpen(true)
