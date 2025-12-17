@@ -99,14 +99,6 @@ let main
                             const display_name = setdisplay_name || first_name + ' ' + last_name || null
                             const hashed_password = await hashPassword(raw_password) || null
                         
-                            if (!username || !first_name || !last_name || !email || !raw_password) {
-                                throw new Error("Missing one or more required fields.")
-                            }
-                            
-                            if (role > 2 || role < -1) {
-                                throw new Error("Invalid role given.")
-                            }
-                        
                             const params = [username, first_name, last_name, email, role, biography, reports, display_name, hashed_password]
                         
                             const qs = `INSERT INTO Users 
@@ -114,7 +106,14 @@ let main
                                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
                         
                             try {
-                                query(qs, params).then(data => {console.log({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})})
+                                if (!username || !first_name || !last_name || !email || !raw_password) {
+                                    throw new Error("ERROR: Missing one or more required fields.")
+                                }
+                                
+                                if (role > 2 || role < -1) {
+                                    throw new Error("ERROR: Invalid role given.")
+                                }
+                                await query(qs, params).then(data => {console.log({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})})
                             } catch (error) {
                                 console.log(error.message)
                             }
@@ -163,16 +162,15 @@ let main
                             const hashed_password = await hashPassword(raw_password) || user[0].hashed_password
                             const id = user[0].id
                         
-                            if (role > 2 || role < -1) {
-                                throw new Error("Invalid role given.")
-                            }
-                        
                             const params = [username, first_name, last_name, email, role, biography, reports, display_name, hashed_password, id]
                         
                             const qs = `UPDATE Users set username=$1, first_name = $2, last_name=$3, email=$4, role=$5, biography=$6, reports=$7, display_name=$8, hashed_password=$9 WHERE id=$10`
                         
                             try {
-                                query(qs, params).then(data => {console.log(`Number of users updated:${data.rowCount}`)})
+                                if (role > 2 || role < -1) {
+                                    throw new Error("ERROR: Invalid role given.")
+                                }
+                                await query(qs, params).then(data => {console.log(`Number of users updated:${data.rowCount}`)})
                             } catch (error) {
                                 console.log(error.message)
                             }
@@ -186,11 +184,10 @@ let main
                             const qsNum = `DELETE from Users WHERE id=$1`
                         
                             try {
-
                                 if (isNaN(idorusername)) {
-                                    query(qsNaN, params).then(data => console.log(`${data.rowCount} row deleted`))
+                                    await query(qsNaN, params).then(data => console.log(`${data.rowCount} row deleted`))
                                 } else {
-                                    query(qsNum, params).then(data => console.log(`${data.rowCount} row deleted`))
+                                    await query(qsNum, params).then(data => console.log(`${data.rowCount} row deleted`))
                                 }
                             } catch (error) {
                                 console.log(error.message)
@@ -201,7 +198,7 @@ let main
                             if (oneOrMore == 1) {
                                 const qs = `SELECT * FROM Users`
                                 try {
-                                    query(qs).then(data => {
+                                    await query(qs).then(data => {
                                         for (let i = 0; i < data.rowCount; i++) {
                                             console.log(data.rows[i])
                                         }
@@ -269,7 +266,7 @@ let main
                             const qs = `UPDATE Posts set text_content = $1, title=$2, reports=$3, likes=$4 WHERE id=$5`
                         
                             try {
-                                query(qs, params).then(data => {console.log(`Number of posts updated:${data.rowCount}`)})
+                                await query(qs, params).then(data => {console.log(`Number of posts updated:${data.rowCount}`)})
                             } catch (error) {
                                 console.log(error.message)
                             }
@@ -281,7 +278,7 @@ let main
                             const qs = `DELETE from Posts WHERE id=$1`
                         
                             try {
-                                query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
+                                await query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
                             } catch (error) {
                                 console.log(error.message)
                             }
@@ -291,7 +288,7 @@ let main
                             if (oneOrMore == 1) {
                                 const qs = `SELECT * FROM Posts`
                                 try {
-                                    query(qs).then(data => {
+                                    await query(qs).then(data => {
                                         for (let i = 0; i < data.rowCount; i++) {
                                             console.log(data.rows[i])
                                         }
@@ -349,7 +346,7 @@ let main
                             const qs = `UPDATE Comments set text_content = $1, reports=$2, likes=$3 WHERE id=$4`
                         
                             try {
-                                query(qs, params).then(data => {console.log(`Number of comments updated:${data.rowCount}`)})
+                                await query(qs, params).then(data => {console.log(`Number of comments updated:${data.rowCount}`)})
                             } catch (error) {
                                 console.log(error.message)
                             }
@@ -361,7 +358,7 @@ let main
                             const qs = `DELETE from Comments WHERE id=$1`
                         
                             try {
-                                query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
+                                await query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
                             } catch (error) {
                                 console.log(error.message)
                             }
@@ -371,7 +368,7 @@ let main
                             if (oneOrMore == 1) {
                                 const qs = `SELECT * FROM Comments`
                                 try {
-                                    query(qs).then(data => {
+                                    await query(qs).then(data => {
                                         for (let i = 0; i < data.rowCount; i++) {
                                             console.log(data.rows[i])
                                         }
@@ -402,7 +399,7 @@ let main
                     if (reportsSelection == 1) {
                         const qs = `SELECT * FROM Users ORDER BY reports DESC`
                         try {
-                            query(qs).then(data => {
+                            await query(qs).then(data => {
                                 for (let i = 0; i < data.rowCount; i++) {
                                     console.log(data.rows[i])
                                 }
@@ -413,7 +410,7 @@ let main
                     } else if (reportsSelection == 2) {
                         const qs = `SELECT * FROM Posts ORDER BY reports DESC`
                         try {
-                            query(qs).then(data => {
+                            await query(qs).then(data => {
                                 for (let i = 0; i < data.rowCount; i++) {
                                     console.log(data.rows[i])
                                 }
@@ -423,11 +420,11 @@ let main
                         }
                     } else if (reportsSelection == 3) {
                         console.log("Get report(s)")
-                        const usersOrPosts = await askQuestion(`Get options:\n\t1. Get all reports\n\t2. Get reports for a specific user\n\t3. Get reports for a specific post\n`)
+                        const usersOrPosts = await askQuestion(`Get options:\n\t1. Get all reports\n\t2. Get reports for a specific user\n\t3. Get reports for a specific post\n\t4. Get reports for a specific comment\n`)
                         if (usersOrPosts == 1) {
                             const qs = `SELECT * FROM Reports`
                             try {
-                                query(qs).then(data => {
+                                await query(qs).then(data => {
                                     for (let i = 0; i < data.rowCount; i++) {
                                         console.log(data.rows[i])
                                     }
@@ -437,10 +434,11 @@ let main
                             }
                         } else if (usersOrPosts == 2) {
                             const id = await askQuestion(`Please enter the id of the user you would like to get the reports for: `)
-                            const qs = `SELECT * FROM Reports WHERE target_id=$1`
-                            const params = [id]
+                            const type = 0
+                            const qs = `SELECT * FROM Reports WHERE target_id=$1 AND type=$2`
+                            const params = [id, type]
                             try {
-                                query(qs, params).then(data => {
+                                await query(qs, params).then(data => {
                                     for (let i = 0; i < data.rowCount; i++) {
                                         console.log(data.rows[i])
                                     }
@@ -450,10 +448,25 @@ let main
                             }
                         } else if (usersOrPosts == 3) {
                             const id = await askQuestion(`Please enter the id of the post you would like to get the reports for: `)
-                            const qs = `SELECT * FROM Reports WHERE target_id=$1`
-                            const params = [id]
+                            const type = 1
+                            const qs = `SELECT * FROM Reports WHERE target_id=$1 AND type=$2`
+                            const params = [id, type]
                             try {
-                                query(qs, params).then(data => {
+                                await query(qs, params).then(data => {
+                                    for (let i = 0; i < data.rowCount; i++) {
+                                        console.log(data.rows[i])
+                                    }
+                                })
+                            } catch (error) {
+                                console.log(error.message)
+                            }
+                        } else if (usersOrPosts == 4) {
+                            const id = await askQuestion(`Please enter the id of the comment you would like to get the reports for: `)
+                            const type = 2
+                            const qs = `SELECT * FROM Reports WHERE target_id=$1 AND type=$2`
+                            const params = [id, type]
+                            try {
+                                await query(qs, params).then(data => {
                                     for (let i = 0; i < data.rowCount; i++) {
                                         console.log(data.rows[i])
                                     }
@@ -468,13 +481,31 @@ let main
                         console.log('Delete report')
                         const id = await askQuestion(`Please enter the id of the report you would like to delete: `)
                         const params = [id]
-                        
+
+                        // getting report so you can use type and target_id change the reports count on it's target
+                        const qs0 = `SELECT * FROM Reports WHERE id=$1`
+                        let report = null
+                        try {
+                            report = await query(qs0, params)
+                            report = post.rows
+                        } catch (error) {
+                            console.log(error.message)
+                        }
+
                         const qs = `DELETE from Reports WHERE id=$1`
                     
                         try {
-                            query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
+                            await query(qs, params).then(data => console.log(`${data.rowCount} row deleted`))
                         } catch (error) {
                             console.log(error.message)
+                        }
+
+                        if (report[0].type == 0) {
+                            await deleteReportOnUser(report[0].target_id)
+                        } else if (report[0].type == 1) {
+                            await deleteReportOnPost(report[0].target_id)
+                        } else if (report[0].type == 2) {
+                            await deleteReportOnComment(report[0].target_id)
                         }
                     } else {
                         console.log("Wrong number Admin, please try again later.")
@@ -502,4 +533,32 @@ try {
     one_something();
 } catch (error) {
     console.log(error)
+}
+
+// Helper functions copied and edited from server.js
+/** Helper function to add a report to a user */
+async function deleteReportOnUser(user_id) {
+    const qs = `UPDATE users SET reports = reports - 1 WHERE id=$1`
+    const params = [user_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to add a report to a post */
+async function deleteReportOnPost(post_id) {
+    const qs = `UPDATE posts SET reports = reports - 1 WHERE id=$1`
+    const params = [post_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to add a report to a comment */
+async function deleteReportOnComment(comment_id) {
+    const qs = `UPDATE comments SET reports = reports - 1 WHERE id=$1`
+    const params = [comment_id]
+
+    await query(qs, params)
+    return
 }
