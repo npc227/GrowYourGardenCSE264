@@ -21,7 +21,7 @@ import TI6 from './assets/tempart/apple.jpg'
 import TI7 from './assets/tempart/firdge.jpg'
 
 //and seed logo
-import seed from './assets/tempart/gygseed.png'
+import watercan from './assets/tempart/watercan.png'
 
 function App() {
   //const [count, setCount] = useState(0)
@@ -100,7 +100,7 @@ function App() {
       {/*Seperate from navbar: main body of page. keep all elements column aligned in the center*/}
       <section class={'pageElements'}>
 
-        <img src={seed} id={'seedImg'} onClick={ () => {
+        <img src={watercan} id={'seedImg'} onClick={ () => {
 
           let tempArr = posts
           console.log(tempArr)
@@ -140,7 +140,7 @@ function App() {
 
       {/*Modal for post info!*/}
       <PostModal PostModalOpen={PostModalOpen} setPostModalOpen={setPostModalOpen} post={selectedPost}
-    />
+      />
 
     </>
   )
