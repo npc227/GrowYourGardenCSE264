@@ -28,6 +28,7 @@ import TI7 from './assets/tempart/firdge.jpg'
 //and seed, watering can imgs
 import watercan from './assets/tempart/watercan.png'
 import gygseed from './assets/tempart/gygseed.png'
+import reporticon from './assets/tempart/gygreport.png'
 
 function App() {
   //const [count, setCount] = useState(0)
@@ -224,7 +225,7 @@ function App() {
         <div class={'interactions'}>
 
           {/*Watering can "refreshes" posts*/}
-          <img src={watercan} id={'seedImg'} onClick={ () => {
+          <img src={watercan} class={'seedImg'} onClick={ () => {
 
             //create copy of posts for shuffle
             //so it doesn't give a reference
@@ -237,7 +238,7 @@ function App() {
           }></img>
 
           {/*Seed will allow a logged in user to make a post*/}
-          <img src={gygseed} id={'seedImg'} onClick={ () => {
+          <img src={gygseed} class={'seedImg'} onClick={ () => {
             
             setMakePostOpen(true)
 
@@ -273,20 +274,32 @@ function App() {
           
         </div>
 
-      </section>
+        {/*Footer/Info for bottom of page*/}
+        <section class={'interaction'}>
 
-      {/*Footer/Info for bottom of page*/}
-      <section class={'footer'}>
+          <img src={reporticon} class={'footerimg'} onClick={ () => {
 
-        <img src={createAcc} id={'createAcc'} onClick={ () => {
-
-          //on click open create account modal!
-          //NTS:: add validation: if logged in (boolean tracker)
-          //do not open the modal
-          setMakeAccOpen(true)
-            
-          }
+            //on click open create account modal!
+            //NTS:: add validation: if logged in (boolean tracker)
+            //do not open the modal
+            setMakeAccOpen(true)
+              
+            }
           }></img>
+
+          <p></p>
+
+          <img src={createAcc} class={'footerimg'} onClick={ () => {
+
+            //on click open create account modal!
+            //NTS:: add validation: if logged in (boolean tracker)
+            //do not open the modal
+            setMakeAccOpen(true)
+              
+            }
+          }></img>
+
+        </section>
 
       </section>
 

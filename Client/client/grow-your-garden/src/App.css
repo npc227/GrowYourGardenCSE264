@@ -78,12 +78,12 @@ body {
 
 .interactions {
   align-self: center;
-  width: 200px;
+  width: 300px;
   display: flex;
   justify-content: space-between;
 }
 
-#seedImg {
+.seedImg {
 
   width: 67px;
   height: 67px;
@@ -93,9 +93,40 @@ body {
 
 }
 
+.footerimg {
+
+  width: 200px;
+
+}
+
+.interactions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 200px;
+}
+
+.interaction {
+  margin-top: 70px;
+  justify-self: center;
+  align-self: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
 #createAcc {
 
-  position: relative;
+  align-self: center;
+  width: 300px;
+  height: auto;
+  margin-top: 3.67em;
+  bottom: -10px;
+
+}
+
+#makeRep {
+
+  align-self: center;
   width: 300px;
   height: auto;
   margin-top: 3.67em;
