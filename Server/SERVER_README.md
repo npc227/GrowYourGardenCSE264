@@ -23,7 +23,7 @@ When you obtain attachments that way, they will be sorted by which one was creat
 
 ### ALL OF THESE ROUTES EXCEPT FOR LOGIN / LOGOUT / CREATE USER REQUIRE AUTHORIZATION HEADER!
 **HEADER FORMAT:**
-authorization -> Bearer [TOKEN]
+authorization: "Bearer [TOKEN]"
 
 # Routes
 ## ACCESS ROUTES
@@ -41,6 +41,9 @@ Attempts to logout a user with the token provided in the authorization header
 ## GET ROUTES
 ### /users
 Returns all users in the database, except users whose IDs are negative (test and admin accounts)
+
+### /users/me
+Returns the user that is _currently logged in_, so requires authentication.
 
 ### /users/:id
 Returns the user with the id given, or an error
@@ -105,7 +108,6 @@ title -> fun title
 Adds a comment to the database under the post with id = post_id. Both the user id given in the body and the post id given in the request must be valid.
 *EXAMPLE JSON*
 `{
-    "user_id":-1,
     "text_content":"A cool comment made by an admin"
 }`
 
@@ -173,7 +175,6 @@ Functions same as above, but for comments!
 Attempts to add a report to a post. Requires the user_id (until OAUTH is added) and a text_body.
 *EXAMPLE JSON BODY:*
 {
-    "user_id":-1,
     "text_content":"This post is stupid!"
 }
 
