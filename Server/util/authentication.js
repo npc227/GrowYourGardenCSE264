@@ -2,6 +2,8 @@ import bcrypt from 'bcrypt'
 import NodeCache from 'node-cache'
 import jwt from 'jsonwebtoken'
 
+import { query } from './postgres.js'
+
 const SALT_ROUNDS = 10
 const JWT_SECRET = process.env.JWT_SECRET
 const JWT_EXPIRY = '1h'
@@ -97,6 +99,98 @@ export function authenticateToken(req, res, next) {
         }
 
         req.user_id = user.sub
-        next()
+        return next()
     });
+}
+
+export const actionList = {
+    "READ":0,
+    "WRITE":1,
+    "UPDATE":2,
+}
+
+export const roleTable = {
+    "ADMIN":-1,
+    "SURVEYOR":0,
+    "GARDENER":1,
+    "LANDSCAPER":2
+}
+
+
+/**
+ * Creates middleware function that authorizes a user to do a certain task
+ * @param {*} target_id Thing that user wants to action on (e.g, post id)
+ * @param {*} action One of "READ", "WRITE", or "UPDATE" as shown above
+ * @return causes status to return 401 if authorization is not given, or continue if user is authorized.
+ */
+export function authorizeUser(target, action) {
+
+    return async (req, res, next) => {
+
+        if (action == actionList["READ"]) { //no perms required to read
+            return next()
+        }
+
+        let user_id = req.user_id
+        if (!user_id) { //if no user id is given, just return false
+            return res.status(401).json("No user id found")
+        }
+        console.log(user_id)
+
+        const qs = `SELECT * FROM users WHERE id=$1`
+        const params = [user_id]
+        let data = await query(qs, params)
+        data = data.rows[0]
+        console.log(data)
+
+        if (!data) {
+            return res.status(401).json(`No user with id ${user_id} found in database`)
+        }
+
+        const user = data //get first user
+        const role = user["role"]
+        if (role == roleTable["ADMIN"]) { // Admins can do anything
+            return next()
+        }
+
+        // users can only update posts that they wrote themselves
+        if (action == actionList["UPDATE"]) {
+            switch (target) {
+                case "USER":
+                    if (req.body["user_id"] && user_id == req.params.id) { //if user is trying to update themselves..
+                        return next() //allow
+                    }
+                    //otherwise not allowed
+                    return res.status(401).json(`User with id ${user_id} cannot update user with id ${req.params.id}`)
+
+                case "POST":
+                    const qp = `SELECT * FROM posts WHERE id=$1`
+                    const qp_params = [req.params.id]
+                    let data = (await query(qp, qp_params)).rows
+                    data = data[0]
+                    if (data["user_id"] == user_id) { //if user is trying to update a post they made..
+                        return next() //allow
+                    }
+                    return res.status(401).json(`User with id ${user_id} cannot update post with id ${req.params.id} because it was made by user with id ${data["user_id"]}`)
+
+                case "COMMENT":
+                    const qc = `SELECT * FROM posts WHERE id=$1`
+                    const qc_params=[req.params.comment_id]
+                    data = (await query(qc, qc_params)).rows
+                    data = data[0]
+                    if (data["user_id"] == user_id) { //if user is trying to update a post they made..
+                        return next() //allow
+                    }
+                    return res.status(401).json(`User with id ${user_id} cannot update post with id ${req.params.id} because it was made by user with id ${data["user_id"]}`)
+            }
+            res.status(401).json(`Unknown target.`)
+        }
+
+        // users can write as long as they are not a surveyor, or if they are writing a report (which surveyors can do)
+        if (action == actionList["WRITE"] && (role > 0 || target == "REPORT")) {
+            return next()
+        }
+        res.status(401).json(`No access`)
+
+    }
 }

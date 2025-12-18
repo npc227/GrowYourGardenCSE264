@@ -96,7 +96,6 @@ Adds a post to the database. Only works if a valid user id is given
 *MULTIPART FORMAT*
 **Format: Key -> Pair**
 image -> (file)
-user_id -> 2
 text_content -> something witty
 title -> fun title
 

@@ -5,7 +5,7 @@ import 'dotenv/config' //This will pull in the .env file
 
 import { query } from './util/postgres.js'
 import { uploadMulter, uploadGCS } from './util/cloudstorage.js'
-import { hashPassword, comparePass, authenticateToken, loginUser, logoutUser } from './util/authentication.js'
+import { hashPassword, comparePass, authenticateToken, loginUser, logoutUser, actionList, authorizeUser } from './util/authentication.js'
 
 const DB_PORT = process.env.DB_PORT
 // these are the three report types
@@ -262,7 +262,7 @@ app.post('/upload_file', authenticateToken, uploadMulter.single("image"), async 
 })
 
 // create a new post with desired fields. Note that user ID must be a valid user
-app.post('/posts', authenticateToken, uploadMulter.single("image"), async (req, res) => {
+app.post('/posts', authenticateToken, authorizeUser("POST", actionList["WRITE"]), uploadMulter.single("image"), async (req, res) => {
     const file = req.file; let publicUrl = null;
     if (file) {
         console.log("Recieved image: " + file.originalname)
@@ -289,7 +289,7 @@ app.post('/posts', authenticateToken, uploadMulter.single("image"), async (req, 
 })
 
 // create a new comment with the desired fields. Note that user and post ids must be valid
-app.post('/posts/:post_id/comments', authenticateToken, async (req, res) => {
+app.post('/posts/:post_id/comments', authenticateToken, authorizeUser("COMMENT", actionList["WRITE"]), async (req, res) => {
     const body = req.body
     const user_id = req.user_id || null; const post_id = req.params.post_id;
     const text_content = body["text_content"] || null
@@ -313,7 +313,7 @@ app.post('/posts/:post_id/comments', authenticateToken, async (req, res) => {
 })
 
 // create a new report on a user
-app.post('/users/:id/reports', authenticateToken, async (req, res) => {
+app.post('/users/:id/reports', authenticateToken, authorizeUser("REPORT", actionList["WRITE"]), async (req, res) => {
     const body = req.body;
     const user_id = req.user_id || null; const reported_user_id = req.params.id
     const text_content = body["text_content"] || null
@@ -337,7 +337,7 @@ app.post('/users/:id/reports', authenticateToken, async (req, res) => {
 })
 
 // create a new report on a post
-app.post('/posts/:id/reports', authenticateToken, async (req, res) => {
+app.post('/posts/:id/reports', authenticateToken, authorizeUser("REPORT", actionList["WRITE"]), async (req, res) => {
     const body = req.body;
     const user_id = req.user_id || null; const post_id = req.params.id
     const text_content = body["text_content"] || null
@@ -361,7 +361,7 @@ app.post('/posts/:id/reports', authenticateToken, async (req, res) => {
 })
 
 // create a new report on a comment
-app.post('/comments/:id/reports', authenticateToken,  async (req, res) => {
+app.post('/comments/:id/reports', authenticateToken, authorizeUser("REPORT", actionList["WRITE"]), async (req, res) => {
     const body = req.body;
     const user_id = req.user_id || null; const comment_id = req.params.id
     const text_content = body["text_content"] || null
@@ -387,10 +387,9 @@ app.post('/comments/:id/reports', authenticateToken,  async (req, res) => {
 /** PUT ROUTES */
 
 // update a user
-app.put('/users/:id', authenticateToken, (req, res) => {
+app.put('/users/:id', authenticateToken, authorizeUser("USER", actionList["UPDATE"]), (req, res) => {
     const body = req.body
     const id = req.params.id
-    const user_id = req.user_id
 
     const username = body["username"] || null
     const first_name = body["first_name"] || null
@@ -417,7 +416,7 @@ app.put('/users/:id', authenticateToken, (req, res) => {
 })
 
 // edit an existing post. Note that you can only change the title and text content through this method. Anything else requires admin console or alternative command
-app.put('/posts/:id', authenticateToken, (req, res) => {
+app.put('/posts/:id', authenticateToken, authorizeUser("POST", actionList["UPDATE"]), (req, res) => {
     const body = req.body
     const id = req.params.id
     const user_id = req.user_id
@@ -436,7 +435,7 @@ app.put('/posts/:id', authenticateToken, (req, res) => {
 })
 
 // edit an existing comment
-app.put('/posts/:post_id/comments/:comment_id', authenticateToken,  (req, res) => {
+app.put('/posts/:post_id/comments/:comment_id', authenticateToken, authorizeUser("COMMENT", actionList["UPDATE"]), (req, res) => {
     const body = req.body
     const post_id = req.params.post_id
     const comment_id = req.params.comment_id
@@ -456,7 +455,7 @@ app.put('/posts/:post_id/comments/:comment_id', authenticateToken,  (req, res) =
 /** DELETE ROUTES */
 
 // delete a user
-app.delete('/users/:id', authenticateToken, (req, res) => {
+app.delete('/users/:id', authenticateToken, authorizeUser("USER", actionList["UPDATE"]), (req, res) => {
     const id = req.params.id
     const user_id = req.user_id
     
@@ -470,7 +469,7 @@ app.delete('/users/:id', authenticateToken, (req, res) => {
 })
 
 // delete a post
-app.delete('/posts/:id', authenticateToken, (req, res) => {
+app.delete('/posts/:id', authenticateToken, authorizeUser("POST", actionList["UPDATE"]), (req, res) => {
     const id = req.params.id
     const user_id = req.user_id
     
@@ -484,9 +483,8 @@ app.delete('/posts/:id', authenticateToken, (req, res) => {
 })
 
 // delete a comment
-app.delete('/comments/:id', authenticateToken, (req, res) => {
+app.delete('/comments/:id', authenticateToken, authorizeUser("COMMENT", actionList["UPDATE"]), (req, res) => {
     const id = req.params.id
-    const user_id = req.user_id
 
     const qs = `DELETE FROM comments WHERE id=$1`
     const params = [id]
@@ -498,8 +496,8 @@ app.delete('/comments/:id', authenticateToken, (req, res) => {
 })
 
 // delete a comment with a specific post id and comment id (kind of unnecessary but it is consistent with how comments are obtained.. so)
-app.delete('/posts/:post_id/comments/:comment_id', authenticateToken, (req, res) => {
-    const post_id = req.params.post_id; const comment_id = req.params.comment_id
+app.delete('/posts/:post_id/comments/:id', authenticateToken, authorizeUser("COMMENT", actionList["UPDATE"]), (req, res) => {
+    const post_id = req.params.post_id; const comment_id = req.params.id
     const user_id = req.user_id
 
     const qs = `DELETE FROM comments WHERE id=$1 AND post_id=$2`

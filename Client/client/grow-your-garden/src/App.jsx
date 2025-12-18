@@ -11,6 +11,7 @@ import './components/NavBar.css'
 
 //note: postModal adapted from my job application tracjer project
 import PostModal from './components/PostModal'
+import MakeAcc from './components/MakeAcc'
 
 //import test images from tempimages
 import TI1 from './assets/tempart/snake.jpg'
@@ -32,6 +33,7 @@ function App() {
   //also: usestate for post modal, setting selected post
   const [posts, setPosts] = useState([])
   const [PostModalOpen, setPostModalOpen] = useState(false)
+  const [MakeAccOpen, setMakeAccOpen] = useState(false)
   const [selectedPost, setSelPost] = useState()
 
   //keep track of loading
@@ -199,12 +201,10 @@ function App() {
 
         <img src={createAcc} id={'createAcc'} onClick={ () => {
 
-          //create copy of posts for shuffle
-          //so it doesn't give a reference
-          let tempArr = [...posts]
-          console.log(tempArr)
-          setPosts(shufflePosts(tempArr))
-          console.log(posts)
+          //on click open create account modal!
+          //NTS:: add validation: if logged in (boolean tracker)
+          //do not open the modal
+          setMakeAccOpen(true)
             
           }
           }></img>
@@ -214,6 +214,8 @@ function App() {
 
       {/*Modal for post info!*/}
       <PostModal PostModalOpen={PostModalOpen} setPostModalOpen={setPostModalOpen} post={selectedPost}
+      /> 
+      <MakeAcc MakeAccOpen={MakeAccOpen} setMakeAccOpen={setMakeAccOpen}
       />
 
     </>
