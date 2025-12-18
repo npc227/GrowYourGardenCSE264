@@ -33,6 +33,7 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
 
     //usestates for important values
     const [user, setUserID] = useState()
+    const [img, setImg] = useState()
     const [title, setTitle] = useState()
     const [text, setTextContent] = useState()
     const [likes, setLikes] = useState()
@@ -63,6 +64,7 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
 
         setTitle(post?.title || '')
         setTextContent(post?.text_content || '')
+        setImg(post?.image || '')
         setLikes(post?.likes || '')
 
     }, [post])
@@ -80,9 +82,9 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
 
         </div>
 
-        <div class={'tempImg'}>
-
-        </div>
+        <img class={'tempImg'} src={img}>
+        
+        </img>
 
       </Box>
     </Modal>
