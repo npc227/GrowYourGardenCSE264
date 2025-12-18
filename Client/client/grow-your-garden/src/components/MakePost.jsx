@@ -14,7 +14,7 @@ const style = {
 }
 
 //allows for the creation of account by inputting relevabt info
-export default function MakePost({MakePostOpen, setMakePostOpen}) {
+export default function MakePost({MakePostOpen, setMakePostOpen, getPosts}) {
 
   //set up usestates for important values
   const [title, setTitle] = useState()
@@ -79,8 +79,6 @@ export default function MakePost({MakePostOpen, setMakePostOpen}) {
       postData.append("title", postBody.title)
       postData.append("text_content", postBody.text_content)
 
-      console.log(postData.body)
-
     }
 
     //api call to add new post to database
@@ -109,6 +107,10 @@ export default function MakePost({MakePostOpen, setMakePostOpen}) {
       setTC(undefined)
       setUndefMsg(false)
       setMakePostOpen(false)
+
+      //refresh posts in here
+      //so that upon closure of the modal, posts array will have access to the new one
+      getPosts()
       handleModalClose()
 
     })

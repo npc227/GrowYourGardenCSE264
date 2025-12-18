@@ -52,16 +52,15 @@ function App() {
     let data = await fetch('http://localhost:3000/posts', {
       method: 'GET',
     })
-    .then(res => {
-      if(!res.ok) {
+    .then(data => {
+      if(!data.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
-      return res.json()
+      return data.json()
     })
     .then(data => {
       console.log(data)
 
-      //shuffle the JSON data before putting it in posts
       setPosts(data)
       console.log(posts)
 
@@ -82,6 +81,9 @@ function App() {
       })
       await getPosts()
       setLoading(false)
+
+      //after updated posts have been fetched, reset the indicator
+      localStorage.setItem("post added", "not yet")
     } 
     fetchPosts()
 
@@ -97,11 +99,35 @@ function App() {
     )
   }
 
+  //ensure posts are updated
+  function updatePostArr() {
+    //re-fetch posts...
+
+    let data = fetch('http://localhost:3000/posts', {
+      method: 'GET',
+    })
+    .then(data => {
+      if(!data.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+      return data.json()
+    })
+    .then(data => {
+      console.log(data)
+
+      setPosts(data)
+      console.log(posts)
+
+    })
+    
+  }
+
   //post randomizer
   //post grid will auto pull first 4 posts, so shuffling all is a simpler algoritm
   //than creating an entirely different array/tracker for random index of posts 
   //(trust me, I tried... :3)
   function shufflePosts(postArr) {
+
     console.log("enter shuffle")
 
     //Using Fisher-Yates Algorithm adapted from
@@ -208,10 +234,11 @@ function App() {
 
           {/*Seed will allow a logged in user to make a post*/}
           <img src={gygseed} id={'seedImg'} onClick={ () => {
-
+            
             setMakePostOpen(true)
+
               
-            }
+          }
           }></img>
 
         </div>
@@ -266,7 +293,7 @@ function App() {
       />
       <Login LoginOpen={LoginOpen} setLoginOpen={setLoginOpen}
       />
-      <MakePost MakePostOpen={MakePostOpen} setMakePostOpen={setMakePostOpen}
+      <MakePost MakePostOpen={MakePostOpen} setMakePostOpen={setMakePostOpen} getPosts={getPosts}
       />
 
     </>
