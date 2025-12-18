@@ -4,6 +4,7 @@ This is the backend server which transforms the Supabase database into an API. I
 or
 `npm run` for the stable build
 
+
 # Important Note About Functionality
 Attachments (photos) are not given when searching by post. This is because they are in a separate table.
 That separate table has all attachments inside of it, and you can obtain all attachments for a certain post using a specific route.
@@ -178,8 +179,8 @@ Attempts to add a report to a post. Requires the user_id (until OAUTH is added) 
     "text_content":"This post is stupid!"
 }
 
-### /users/:user_id/reports
-Attempts to add a report to a user. Same as above
+### /users/reports
+Attempts to add a report to a user. Same as above, but must include "username" field with username
 
 ### /comments/:comment_id/reports
 Attempts to add a report to a comment. Same as above

@@ -324,9 +324,9 @@ app.post('/posts/:post_id/comments', authenticateToken, authorizeUser("COMMENT",
 })
 
 // create a new report on a user
-app.post('/users/:id/reports', authenticateToken, authorizeUser("REPORT", actionList["WRITE"]), async (req, res) => {
+app.post('/users/reports', authenticateToken, authorizeUser("REPORT", actionList["WRITE"]), async (req, res) => {
     const body = req.body;
-    const user_id = req.user_id || null; const reported_user_id = req.params.id
+    const user_id = req.user_id || null; const reported_username = body["username"]
     const text_content = body["text_content"] || null
     const type = USER_REPORT
 
@@ -334,6 +334,22 @@ app.post('/users/:id/reports', authenticateToken, authorizeUser("REPORT", action
         res.status(400).json("Missing required fields!")
     }
 
+    /** Get id from username */
+    let reported_user_id = null
+    const id_params = [reported_username]
+    const id_qs = `SELECT id FROM users WHERE username=$1`
+    try {
+        let data = await query(id_qs, id_params)
+        data = data.rows
+        if (!data[0]) {
+            return res.status(400).json(`No users with name ${reported_username}`)
+        }
+        reported_user_id = data[0]["id"]
+    } catch (error) {
+        return res.status(400).json(error.message)
+    }
+
+    /** Make report */
     const params = [user_id, text_content, reported_user_id, type]
     const qs = `INSERT INTO reports (user_id, text_content, target_id, type) VALUES ($1, $2, $3, $4)`
     try {
