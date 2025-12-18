@@ -9,7 +9,11 @@ import './PostModal.css'
 export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
 
     //handles open and close of the modal
-    const handleModalClose = () => setPostModalOpen(false)
+    const handleModalClose = () => {
+      setComms([])
+      setPostModalOpen(false)
+
+    }
 
     //handles styling
     const style = {
@@ -45,7 +49,7 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
 
     //sets post values upon load
     useEffect(() => {
-      setUserID(post?.user_id || '')
+      setUserID(post?.username || '')
 /*
         const getUser = async() => {
         fetch(`http://localhost:3000/users/${user}`, {
@@ -165,6 +169,7 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
 
     //whenever tracker is updated/changed, re-fetch comments
     useEffect(() => {
+
       if (post == null) {
         return
       }
