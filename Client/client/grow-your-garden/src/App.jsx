@@ -163,7 +163,6 @@ function App() {
               if (loggedIn === false) {
 
                 console.log("logging in")
-                setLI(true)
                 setLoginOpen(true)
 
               } else {
@@ -193,6 +192,7 @@ function App() {
                 })
                 .then(response => {
                   console.log(response)
+                  setLI(false)
 
                 })
 
@@ -309,11 +309,11 @@ function App() {
       /> 
       <MakeAcc MakeAccOpen={MakeAccOpen} setMakeAccOpen={setMakeAccOpen}
       />
-      <Login LoginOpen={LoginOpen} setLoginOpen={setLoginOpen}
+      <Login LoginOpen={LoginOpen} setLoginOpen={setLoginOpen} loggedIn={loggedIn} setLI={setLI}
       />
       <MakePost MakePostOpen={MakePostOpen} setMakePostOpen={setMakePostOpen} getPosts={getPosts}
       />
-      <ProfModal ProfModalOpen={ProfModalOpen} setProfModalOpen={setProfModalOpen}
+      <ProfModal ProfModalOpen={ProfModalOpen} setProfModalOpen={setProfModalOpen} loggedIn={loggedIn}
       />
 
     </>

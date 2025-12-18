@@ -4,10 +4,13 @@
 import {useState, useEffect} from 'react'
 import {Modal, Box} from '@mui/material'
 
-export default function ProfModal({ProfModalOpen, setProfModalOpen}) {
+export default function ProfModal({ProfModalOpen, setProfModalOpen, loggedIn}) {
 
     //handles open and close of the modal
-    const handleModalClose = () => setProfModalOpen(false)
+    const handleModalClose = () => {
+      setProfModalOpen(false)
+
+    }
 
     //handles styling
     const style = {
@@ -51,15 +54,17 @@ export default function ProfModal({ProfModalOpen, setProfModalOpen}) {
         }
         getUser()
 
-    }, [])
+    }, [loggedIn])
 
   //main area to display profile info
   return ( 
     <Modal open={ProfModalOpen} onClose={handleModalClose}>
       <Box sx={style}>
         <h1>displayn: {user.display_name}</h1>
-        <h1>fn: {user.first_name}</h1>
+        <h2>fn: {user.first_name}</h2>
         <h2>ln: {user.last_name}</h2>
+
+        <h3>bio: {user.biography}</h3>
       </Box>
     </Modal>
   )

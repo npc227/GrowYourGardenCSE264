@@ -14,7 +14,7 @@ const style = {
 }
 
 //allows for the creation of account by inputting relevant info
-export default function Login({LoginOpen, setLoginOpen, setLI}) {
+export default function Login({ReportOpen, setLoginOpen, setLI}) {
 
   //set up usestates for important values
   const [un, setUN] = useState()
