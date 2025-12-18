@@ -13,6 +13,7 @@ import './components/NavBar.css'
 import PostModal from './components/PostModal'
 import MakeAcc from './components/MakeAcc'
 import Login from './components/Login'
+import MakePost from './components/MakePost'
 
 //import test images from tempimages
 import TI1 from './assets/tempart/snake.jpg'
@@ -39,6 +40,7 @@ function App() {
   const [selectedPost, setSelPost] = useState()
   const [LoginOpen, setLoginOpen] = useState()
   const [loggedIn, setLI] = useState(false)
+  const [MakePostOpen, setMakePostOpen] = useState(false)
 
   //keep track of loading
   const [loading, setLoading] = useState(true)
@@ -144,8 +146,10 @@ function App() {
                 //set logged in to false to display correct text
                 setLI(false)
 
-                //format the auth
-                let key = "BEARER " + (localStorage.getItem("key"))
+                //key is returned with quotations.
+                //need to remove the quotations before the bearer/auth can be utilized.
+                //remove quotations from user specific token, combine with "Bearer " to create auth key 
+                let key = "Bearer " + (localStorage.getItem("key").replaceAll('"', ""))
                 
                 //api call to log out
                 fetch('http://localhost:3000/logout', {
@@ -205,12 +209,7 @@ function App() {
           {/*Seed will allow a logged in user to make a post*/}
           <img src={gygseed} id={'seedImg'} onClick={ () => {
 
-            //create copy of posts for shuffle
-            //so it doesn't give a reference
-            let tempArr = [...posts]
-            console.log(tempArr)
-            setPosts(shufflePosts(tempArr))
-            console.log(posts)
+            setMakePostOpen(true)
               
             }
           }></img>
@@ -266,6 +265,8 @@ function App() {
       <MakeAcc MakeAccOpen={MakeAccOpen} setMakeAccOpen={setMakeAccOpen}
       />
       <Login LoginOpen={LoginOpen} setLoginOpen={setLoginOpen}
+      />
+      <MakePost MakePostOpen={MakePostOpen} setMakePostOpen={setMakePostOpen}
       />
 
     </>
