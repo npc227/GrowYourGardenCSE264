@@ -6,6 +6,25 @@ import {Modal, Box, gridClasses} from '@mui/material'
 
 import './PostModal.css'
 
+//handles styling
+const style = {
+    position: 'absolute',
+    top: '7%',
+    left: '26.767%',
+    width: 700,
+    bgcolor: 'blanchedalmond',
+    border: '2px solid #815717ff',
+    boxShadow: 24,
+    p: 4,
+
+    //more customize:\
+    fontFamily: "Verdana", 
+    display: "grid",
+    gridTemplateColumns: "300px 250px", // column widths
+    gap: "10px", // space between grid items
+    padding: "30px",
+};
+
 export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
 
     //handles open and close of the modal
@@ -14,26 +33,6 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
       setPostModalOpen(false)
 
     }
-
-    //handles styling
-    const style = {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 700,
-        bgcolor: 'blanchedalmond',
-        border: '2px solid #815717ff',
-        boxShadow: 24,
-        p: 4,
-
-        //more customize:\
-        fontFamily: "Verdana", 
-        display: "grid",
-        gridTemplateColumns: "300px 250px", // column widths
-        gap: "10px", // space between grid items
-        padding: "30px",
-    };
 
     //usestates for important values
     const [user, setUserID] = useState()
@@ -196,57 +195,61 @@ export default function PostModal({PostModalOpen, setPostModalOpen, post}) {
               <h2 class={'textColor'}>Creator ID: {user}</h2>
               <h3 class={'textColor'}>{text}</h3>
 
+              <img  class={'tempImg'} src={img}>
+            
+              </img>
+
             </div>
 
-            <img class={'tempImg'} src={img}>
-            
-            </img>
-          </section>
+            <p></p>
 
-          {/*Get comment info to be posted*/}
-          <input type={"text"} id={"comment_text"} onChange={(event) => {
-            upTxt(event)
-            console.log(commTxt)
-
-          }
-          }></input> {/*only submit comment upon click so user can change before submission*/}
-          <button id={"addComment"} onClick={() => {
-
-            postComment()
-
-          }}>Comment</button>
-
-          <div id={"CommentSection"}>
-            <h2 onClick={() => {
-
-              if (!openComments) {
-                
-                //referenced: https://react.dev/learn/rendering-lists
-                //only want to render username and text content of comments.
-                //need to refresh tracker in case new comments were added
-                let temp = tracker + 1
-                setTracker(temp)
-                let tempArr = [...comments]
-                console.log(tempArr)
-                setFCD(tempArr.map((comments) => <li>{comments.username}: {comments.text_content}</li>))
-                console.log(filteredCD)
-                setOC(true)
-
-              } else {
-
-                setOC(false)
+            <div class={"rightdiv"}>
+              {/*Get comment info to be posted*/}
+              <input type={"text"} id={"comment_text"} onChange={(event) => {
+                upTxt(event)
+                console.log(commTxt)
 
               }
-        
-              
-            }}>Comments Section</h2> {/*use conditional rendering to only show the list when comments are set to "Open" setOC = true*/}
-            <h3>{openComments 
-                ? <ul>{filteredCD}</ul>
-                : ""
-              }</h3>
+              }></input> {/*only submit comment upon click so user can change before submission*/}
+              <button id={"addComment"} onClick={() => {
 
-          </div>
+                postComment()
 
+              }}>Comment</button>
+
+              <div id={"CommentSection"}>
+                <h2 onClick={() => {
+
+                  if (!openComments) {
+                    
+                    //referenced: https://react.dev/learn/rendering-lists
+                    //only want to render username and text content of comments.
+                    //need to refresh tracker in case new comments were added
+                    let temp = tracker + 1
+                    setTracker(temp)
+                    let tempArr = [...comments]
+                    console.log(tempArr)
+                    setFCD(tempArr.map((comments) => <li>{comments.username}: {comments.text_content}</li>))
+                    console.log(filteredCD)
+                    setOC(true)
+
+                  } else {
+
+                    setOC(false)
+
+                  }
+            
+                  
+                }}>Comments Section</h2> {/*use conditional rendering to only show the list when comments are set to "Open" setOC = true*/}
+                <h3 class="commentssec">{openComments 
+                    ? <ul>{filteredCD}</ul>
+                    : <ul class={"hidden"}></ul>
+                  }</h3>
+
+              </div>
+            </div>
+
+          </section>
 
         </section>
 

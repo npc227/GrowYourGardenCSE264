@@ -6,9 +6,6 @@
   background-color: aliceblue;
   width: 250px;
   height: 250px;
-  align-self: center;
-  justify-items: right;
-  margin-left: 57%;
 }
 
 .postContent {
@@ -18,7 +15,22 @@
 }
 
 .postContainer {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
 
+}
+
+.rightdiv {
+  margin-left: 67px;
+  margin-top: 126.7px;
+}
+
+.commentssec {
+  background-color: white;
+  padding: 16.7px;
+}
+
+.hidden {
+  display: none;
+  background-color: blanchedalmond;
 }

@@ -17,12 +17,15 @@ export default function ProfModal({ProfModalOpen, setProfModalOpen, loggedIn}) {
         position: 'absolute',
         top: '50%',
         left: '50%',
-        transform: 'translate(-50%, -50%)',
+        transform: 'translate(-40%, -70%)',
         width: 400,
         bgcolor: 'blanchedalmond',
         border: '2px solid #000',
         boxShadow: 24,
         p: 4,
+
+        //more customize:\
+        fontFamily: "Verdana"
     };
 
     //usestates for important values
@@ -60,10 +63,9 @@ export default function ProfModal({ProfModalOpen, setProfModalOpen, loggedIn}) {
   return ( 
     <Modal open={ProfModalOpen} onClose={handleModalClose}>
       <Box sx={style}>
-        <h1>displayn: {user.display_name}</h1>
-        <h2>fn: {user.first_name}</h2>
-        <h2>ln: {user.last_name}</h2>
-
+        <h1>Display Name: {user.display_name}</h1>
+        <h2>Username: {user.username}</h2>
+        <h3>Email: {user.email}</h3>
         <h3>bio: {user.biography}</h3>
       </Box>
     </Modal>

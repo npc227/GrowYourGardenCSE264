@@ -4,13 +4,16 @@ import {useState} from 'react'
 import {Button, Modal, Box, TextField, Stack, MenuItem} from '@mui/material'
 
 const style = {
-  postition: 'absolute',
   top: '50%',
   left: '50%',
+  transform: 'translate(140%, 50%)',
   width: 400,
   bgcolor: 'blanchedalmond',
   boxShadow: 24,
   p: 4,
+
+  //more customize:\
+  fontFamily: "Verdana"
 }
 
 //allows for the reporting of account by inputting relevant info
