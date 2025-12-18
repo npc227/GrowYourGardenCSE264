@@ -14,7 +14,7 @@ import PostModal from './components/PostModal'
 import MakeAcc from './components/MakeAcc'
 import Login from './components/Login'
 import MakePost from './components/MakePost'
-//import ProfModal from './components/ProfModal'
+import ProfModal from './components/ProfModal'
 
 //import test images from tempimages
 import TI1 from './assets/tempart/snake.jpg'
@@ -42,7 +42,7 @@ function App() {
   const [LoginOpen, setLoginOpen] = useState()
   const [loggedIn, setLI] = useState(false)
   const [MakePostOpen, setMakePostOpen] = useState(false)
-  //const [ProfModalOpen, setProfModalOpen] = useState(false)
+  const [ProfModalOpen, setProfModalOpen] = useState(false)
 
   //keep track of loading / current selected post's img url
   const [loading, setLoading] = useState(true)
@@ -208,7 +208,7 @@ function App() {
 
               if (loggedIn == true) {
 
-                //setProfModalOpen(true)
+                setProfModalOpen(true)
 
               }
 
@@ -299,9 +299,9 @@ function App() {
       <Login LoginOpen={LoginOpen} setLoginOpen={setLoginOpen}
       />
       <MakePost MakePostOpen={MakePostOpen} setMakePostOpen={setMakePostOpen} getPosts={getPosts}
-      />{/*}
+      />
       <ProfModal ProfModalOpen={ProfModalOpen} setProfModalOpen={setProfModalOpen}
-      />*/}
+      />
 
     </>
   )

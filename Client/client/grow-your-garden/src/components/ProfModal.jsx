@@ -4,10 +4,10 @@
 import {useState, useEffect} from 'react'
 import {Modal, Box} from '@mui/material'
 
-export default function PostModal({ProfModalOpen, setProfModalOpen, prof}) {
+export default function ProfModal({ProfModalOpen, setProfModalOpen}) {
 
     //handles open and close of the modal
-    const handleModalClose = () => setPostModalOpen(false)
+    const handleModalClose = () => setProfModalOpen(false)
 
     //handles styling
     const style = {
@@ -23,19 +23,18 @@ export default function PostModal({ProfModalOpen, setProfModalOpen, prof}) {
     };
 
     //usestates for important values
-    const [user, setUserID] = useState()
-    const [title, setTitle] = useState()
-    const [text, setTextContent] = useState()
-    const [likes, setLikes] = useState()
-    //const [userProfInf, setUserInfo] = useState()
+    const [user, setUserInfo] = useState([])
 
-    //sets post values upon load
+    //sets profile data using values from logged in user upon load
     useEffect(() => {
-        setUserID(post?.user_id || '')
-/*
+        let tempKey = "Bearer " + (localStorage.getItem("key").replaceAll('"', ""))
+
         const getUser = async() => {
-        fetch(`http://localhost:3000/users/${user}`, {
+        fetch(`http://localhost:3000/users/me`, {
             method: 'GET',
+            headers: {
+              'authorization': tempKey
+            },
             })
             .then(res => {
             if(!res.ok) {
@@ -45,27 +44,22 @@ export default function PostModal({ProfModalOpen, setProfModalOpen, prof}) {
             })
             .then(resData => {
             console.log(resData)
-            setUserID(resData[0].username)
+            setUserInfo(resData)
 
             })
 
         }
-        getUser()*/
+        getUser()
 
-        setTitle(post?.title || '')
-        setTextContent(post?.text_content || '')
-        setLikes(post?.likes || '')
+    }, [])
 
-    }, [post])
-
-  //main area to display post info
+  //main area to display profile info
   return ( 
-    <Modal open={PostModalOpen} onClose={handleModalClose}>
+    <Modal open={ProfModalOpen} onClose={handleModalClose}>
       <Box sx={style}>
-        <h1>username: {user}</h1>
-        <h1>title: {title}</h1>
-        <h2>text_content: {text}</h2>
-        <h3>likes: {likes}</h3>
+        <h1>displayn: {user.display_name}</h1>
+        <h1>fn: {user.first_name}</h1>
+        <h2>ln: {user.last_name}</h2>
       </Box>
     </Modal>
   )
