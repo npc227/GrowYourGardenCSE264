@@ -1,22 +1,23 @@
+/*changed max width to be entirety of viewport
+so that devices of larger width can use*/
 #root {
-  max-width: 1280px;
+  max-width: 100vw;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
-
+/* No need for this: will style logo manually
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
-}
+} 
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
-}
+}*/
 
 @keyframes logo-spin {
   from {
@@ -41,20 +42,81 @@
   color: #888;
 }
 
-/*ASSIGNMENT CODE BEGINS HERE*/
+/*assignment code!*/
 
-/*navigation bar. content positioned relative to the parent.
-Bar itself at the top of the page. Contain logo, login/out, profile*/
-.navBar {
-  background-color: antiquewhite;
-  top: 0;
+/*don't want auto padding.
+will specify in certain elements if padding is needed*/
+body {
+  padding: 0;
 }
 
-/*create logo class, using background image to display the logo in 
-React. change the sizing as needed where it appears in the website.
-for now, using 75px by 75px as the baseline*/
-.logo {
-  width: 75px;
-  height: 75px;
-  background-image: url(./assets/tempLogoGYG.png);
+/*General container to keep page elements in a neat column*/
+.pageElements {
+  display: flex;
+  flex-direction: column;
+  justify-self: center;
+}
+
+/*grid for post images. give them a brown border (dirt-esque)*/
+.postGrid {
+  display: grid;
+  max-width: 700px;
+  grid-template-columns: 1fr 1fr;
+  align-content: center;
+  padding: 30px;
+  gap: 40px;
+
+  img {
+    border-radius: 5%;
+    width: 300px;
+    height: 300px;
+    box-shadow: 4px 4px 4px 4px #9a774eff;
+    
+  }
+
+}
+
+.interactions {
+  align-self: center;
+  width: 200px;
+  display: flex;
+  justify-content: space-between;
+}
+
+#seedImg {
+
+  width: 67px;
+  height: 67px;
+  align-self: center;
+  margin-top: 3.67em;
+  margin-bottom: 1.67em;
+
+}
+
+#createAcc {
+
+  position: relative;
+  width: 300px;
+  height: auto;
+  margin-top: 3.67em;
+  bottom: -10px;
+
+}
+
+/*Responsive grid to fit smaller screens*/
+@media only screen and (max-width: 760px) {
+
+  .postGrid {
+    display: grid;
+    max-width: 500;
+    grid-template-columns: 1fr;
+
+    img {
+      border-radius: 5%;
+      max-width: 200px;
+      max-height: 200px;
+    }
+
+  }
+
 }

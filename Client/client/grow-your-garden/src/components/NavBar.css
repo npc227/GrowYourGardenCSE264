@@ -1,0 +1,89 @@
+/* FONT INFO:
+font-family: "poppins", sans-serif;
+font-weight: 700;
+font-style: normal;
+
+font-family: "poppins", sans-serif;
+font-weight: 700;
+font-style: italic;
+
+font-family: "poppins", sans-serif;
+font-weight: 400;
+font-style: normal;
+
+font-family: "poppins", sans-serif;
+font-weight: 400;
+font-style: italic;
+*/
+
+/*NavBar styling*/
+
+/*NavBar container. describes color and
+alignment for items within.*/
+.nav {
+    background-color: blanchedalmond;
+    color: #3d200e;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100vw;
+    height: 100px;
+    margin-top: 0;
+    padding: 0;
+}
+
+/*logo - will replace with img
+in the actual document
+
+add left margin padding and increase size a little bit
+so that it fits cleanly
+
+used adobe illustrator to make vector logo for easier scaling*/
+.logo {
+    height: 5.36767em;
+    margin-left: 3%;
+    margin-bottom: 4%;
+    padding: 0;
+}
+
+/*temp placeholder - will likely add modals for login/profile display*/
+.links {
+    min-width: 220px;
+    margin-right: 5%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    font-family: "poppins", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 20px;
+}
+
+/*Responsiveness added for smaller screens*/
+@media only screen and (max-width: 760px) {
+
+  .logo {
+        height: 4.6767em;
+        margin-left: 3%;
+        margin-bottom: 4%;
+        margin-top: 1%;
+        padding: 0;
+    }
+
+    .links {
+        max-width: 100px;
+        margin-right: 5%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+
+        font-family: "poppins", sans-serif;
+        font-weight: 700;
+        font-style: normal;
+        font-size: 15px;
+    }
+
+}

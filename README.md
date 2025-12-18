@@ -12,7 +12,7 @@ Each component will have its own folder and dedicated README with details on any
 
 ## Roles
 These are the assigned roles:
-* Natalie - Front End
+* Natalie - Front End / Design Lead
 * Mina - Back End / Git Manager
 * Sawyer - Admin Interface
 
