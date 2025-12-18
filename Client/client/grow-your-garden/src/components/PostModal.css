@@ -10,3 +10,15 @@
   justify-items: right;
   margin-left: 57%;
 }
+
+.postContent {
+  display: flex;
+  flex-direction: row;
+  margin-left: 5%;
+}
+
+.postContainer {
+  display: flex;
+  flex-direction: column;
+
+}

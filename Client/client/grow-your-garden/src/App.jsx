@@ -14,6 +14,7 @@ import PostModal from './components/PostModal'
 import MakeAcc from './components/MakeAcc'
 import Login from './components/Login'
 import MakePost from './components/MakePost'
+//import ProfModal from './components/ProfModal'
 
 //import test images from tempimages
 import TI1 from './assets/tempart/snake.jpg'
@@ -41,8 +42,9 @@ function App() {
   const [LoginOpen, setLoginOpen] = useState()
   const [loggedIn, setLI] = useState(false)
   const [MakePostOpen, setMakePostOpen] = useState(false)
+  //const [ProfModalOpen, setProfModalOpen] = useState(false)
 
-  //keep track of loading
+  //keep track of loading / current selected post's img url
   const [loading, setLoading] = useState(true)
   
   //get posts to be used when something is posted
@@ -54,7 +56,7 @@ function App() {
     })
     .then(data => {
       if(!data.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`)
+        throw new Error(`HTTP error! status: ${data.status}`)
       }
       return data.json()
     })
@@ -71,7 +73,6 @@ function App() {
   //useffect for checking api status and running getPosts
   useEffect(() => {
 
-    //"dynamically" refresh posts after shuffle
     const fetchPosts = async() => {
       fetch('http://localhost:3000/up')
       .then(res => res.json())
@@ -87,7 +88,6 @@ function App() {
     } 
     fetchPosts()
 
-    //check to see if posts changed/shuffled
   }, [])
 
   //if it is loading, return div
@@ -204,11 +204,15 @@ function App() {
                 : "Log In"
               }</h3>
         
-            <h3 /*onClick={ () =>{
-              setSelProf(selProf)
-              setProfModalOpen(true)
-            }
-          }*/>Profile</h3>
+            <h3 onClick={ () => {
+
+              if (loggedIn == true) {
+
+                //setProfModalOpen(true)
+
+              }
+
+            }}>Profile</h3>
         </div>
 
       </nav>
@@ -295,7 +299,9 @@ function App() {
       <Login LoginOpen={LoginOpen} setLoginOpen={setLoginOpen}
       />
       <MakePost MakePostOpen={MakePostOpen} setMakePostOpen={setMakePostOpen} getPosts={getPosts}
-      />
+      />{/*}
+      <ProfModal ProfModalOpen={ProfModalOpen} setProfModalOpen={setProfModalOpen}
+      />*/}
 
     </>
   )
