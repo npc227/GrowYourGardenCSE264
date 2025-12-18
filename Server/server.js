@@ -3,10 +3,13 @@ import cors from 'cors'
 
 import 'dotenv/config' //This will pull in the .env file
 
-
 import { query } from './util/postgres.js'
+import { uploadMulter, uploadGCS } from './util/cloudstorage.js'
+import { hashPassword, comparePass, authenticateToken, loginUser, logoutUser, actionList, authorizeUser } from './util/authentication.js'
 
 const DB_PORT = process.env.DB_PORT
+// these are the three report types
+const USER_REPORT = 0; const POST_REPORT = 1; const COMMENT_REPORT = 2;
 
 const app = express()
 
@@ -28,10 +31,14 @@ app.get('/', (_req, res) => {
 })
 
 // get all users excluding test and admin accounts (whose ids are less than 0)
-app.get('/users', (req, res) => {
+app.get('/users', (_req, res) => {
     const qs = `SELECT * FROM Users WHERE id>0`
     try {
-        query(qs).then(data => {res.json(data.rows)})
+        query(qs).then(data => {
+            const filteredUsers = data.rows.map(row => { //we have to remove the hashed passwords from the data..
+                const { hashed_password, ...safeUser} = row
+                return safeUser});
+            res.json(filteredUsers)})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -48,10 +55,24 @@ app.get('/users/query', (req, res) => {
     const params = [target]
 
     try {
-        query(qs, params).then(data => {res.json(data.rows)})
+        query(qs, params).then(data => {
+            const filteredUsers = data.rows.map(row => { //we have to remove the hashed passwords from the data..
+                const { hashed_password, ...safeUser} = row
+                return safeUser});
+            res.json(filteredUsers)})
     } catch (error) {
         res.status(400).json(error.message)
     }
+})
+
+app.get('/users/me', authenticateToken, async (req, res) => {
+   const qs = `SELECT * FROM users WHERE id=$1`
+   const params = [req.user_id]
+   try {
+        query(qs, params).then(data => {data = data.rows[0]; const {hashed_password, ...r_user} = data; res.json(r_user)})
+   } catch (error) {
+        res.status(400).json(error.message)
+   }
 })
 
 // get user with specified id (including test and admin accounts if requested)
@@ -59,7 +80,11 @@ app.get('/users/:id', (req, res) => {
     const qs = `SELECT * FROM Users WHERE id=$1`
     const params = [req.params.id]
     try {
-        query(qs, params).then(data => {res.json(data.rows)})
+        query(qs, params).then(data => {
+            const filteredUsers = data.rows.map(row => { //we have to remove the hashed passwords from the data..
+                const { hashed_password, ...safeUser} = row
+                return safeUser});
+            res.json(filteredUsers)})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -84,6 +109,24 @@ app.get('/posts', (_req, res) => {
     const qs = `SELECT * FROM Posts`
     try {
         query(qs).then(data => {res.json(data.rows)})
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+})
+
+// get post with specified id
+app.get('/posts/:id', async (req, res) => {
+    const qs = `SELECT * From Posts WHERE id=$1`
+    const comment_qs = `SELECT * From Comments WHERE post_id=$1`
+
+    const params = [req.params.id]
+    try {
+        let comment_data = await query(comment_qs, params)
+        comment_data = comment_data.rows
+        let post_data = await query(qs,params)
+        post_data = post_data.rows[0]
+        post_data["comments"] = comment_data; 
+        res.json(post_data)
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -139,9 +182,44 @@ app.get('/posts/:post_id/comments', (req, res) => {
 })
 
 /** POST ROUTES */
+app.post('/login', async (req, res) => {
+    const body = req.body
+    const username = body["username"] || null; const password = body["password"] || null;
+    if (!username || ! password) {
+        res.status(400).json("Missing required fields")
+    }
+
+    const qs = `SELECT * FROM users WHERE username=$1`
+    const params = [username]
+    let data = await query(qs, params)
+    data = data.rows[0] //usernames are unique so we should only get one
+    if (comparePass(password, data["hashed_password"])) {
+        const token = loginUser(data["id"])
+        res.json(token)
+    } else {
+        res.status(401).json("No match for given username and password")
+    }
+})
+
+// logs a user out by removing their token
+app.post('/logout', async (req, res) => {
+    const aHeader = req.headers['authorization']
+    const token = aHeader && aHeader.split(' ')[1]
+
+    if (!token) {
+        res.status(400).json("No token given to logout")
+    }
+
+    const r_count = logoutUser(token)
+    if (r_count > 0) {
+        res.json(`Successfully logged out token: ${token}`)
+    } else {
+        res.json(`Token already logged out`)
+    }
+})
 
 // create a new user with desired fields, note that a user cannot be created with the same email as another user
-app.post('/users', (req, res) => {
+app.post('/users', async (req, res) => {
     const body = req.body
 
     const username = body["username"] || null
@@ -150,67 +228,177 @@ app.post('/users', (req, res) => {
     const email = body["email"] || null
     const role = body["role"] || 0
     const biography = body["biography"] || null
-    const reports = body["reports"] || 0
     const display_name = body["display_name"] || first_name + ' ' + last_name || null
+    const password = await hashPassword(body["password"]) || null
 
-    if (role > 2) {
+    if (!username || !first_name || !last_name || !email || !password) {
+        res.status(400).json("Missing one or more required fields.")
+    }
+
+    if (role > 2 || role < -1) {
         res.status(400).json("Invalid role given.")
     }
 
-    const params = [username, first_name, last_name, email, role, biography, reports, display_name]
+    const params = [username, first_name, last_name, email, role, biography, display_name, password]
 
     const qs = `INSERT INTO Users 
-                (username, first_name, last_name, email, role, biography, reports, display_name)
+                (username, first_name, last_name, email, role, biography, display_name, hashed_password)
                 values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
     try {
-        query(qs, params).then(data => {res.json({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})})
+       let data = await query(qs, params)
+       res.json({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})
     } catch (error) {
         res.status(400).json(error.message)
     }
 })
 
+// this route is mainly for testing purposes and would likely be removed from (or otherwise disabled on) a real release branch
+app.post('/upload_file', authenticateToken, uploadMulter.single("image"), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).send("No file found")
+    }
+
+    try {
+        const publicUrl = await uploadGCS(req.file)
+
+        res.status(200).send({
+            message: "File uploaded successfully!",
+            url: publicUrl
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Unable to upload file to cloud storage')
+    }
+})
+
 // create a new post with desired fields. Note that user ID must be a valid user
-app.post('/posts', (req, res) => {
+app.post('/posts', authenticateToken, authorizeUser("POST", actionList["WRITE"]), uploadMulter.single("image"), async (req, res) => {
+    const file = req.file; let publicUrl = null;
+    if (file) {
+        console.log("Recieved image: " + file.originalname)
+        publicUrl = await uploadGCS(file)
+    }
+
     const body = req.body
 
-    const user_id = body["user_id"] || null
+    const user_id = req.user_id || null
+    let username = await query(`SELECT username FROM users WHERE id=${user_id}`)
+    username = username.rows[0]["username"]
+
     const text_content = body["text_content"] || null
     const title = body["title"] || null
 
-    const reports = 0; const likes = 0; //no likes or reports by default... obviously...
-
-    const params = [user_id, text_content, title, reports, likes]
-    const qs = `INSERT INTO Posts (user_id, text_content, title, reports, likes) VALUES ($1, $2, $3, $4, $5)`
+    const params = [user_id, username, text_content, title, publicUrl]
+    const qs = `INSERT INTO Posts (user_id, username, text_content, title, image) VALUES ($1, $2, $3, $4, $5)`
 
     try {
-        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts under user ${body.user_id}`)})
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new posts under user ${user_id}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
 })
 
 // create a new comment with the desired fields. Note that user and post ids must be valid
-app.post('/posts/:post_id/comments', (req, res) => {
+app.post('/posts/:post_id/comments', authenticateToken, authorizeUser("COMMENT", actionList["WRITE"]), async (req, res) => {
     const body = req.body
-    const user_id = body["user_id"] || null; const post_id = req.params.post_id;
+    const user_id = req.user_id || null; const post_id = req.params.post_id;
     const text_content = body["text_content"] || null
     const reports = 0; const likes = 0;
 
-    const params = [user_id, post_id, text_content, reports, likes]
-    const qs = `INSERT INTO comments (user_id, post_id, text_content, reports, likes) VALUES ($1, $2, $3, $4, $5)`
+    if (!user_id || !post_id) {
+        res.status(400).json("Missing required fields")
+    }
+
+    let username = await query(`SELECT username FROM users WHERE id=${user_id}`)
+    username = username.rows[0]["username"]
+
+    const params = [user_id, username, post_id, text_content, reports, likes]
+    const qs = `INSERT INTO comments (user_id, username, post_id, text_content, reports, likes) VALUES ($1, $2, $3, $4, $5, $6)`
 
     try {
-        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new comments under user ${body.user_id}` )})
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new comments under user ${req.user_id}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
 })
 
+// create a new report on a user
+app.post('/users/:id/reports', authenticateToken, authorizeUser("REPORT", actionList["WRITE"]), async (req, res) => {
+    const body = req.body;
+    const user_id = req.user_id || null; const reported_user_id = req.params.id
+    const text_content = body["text_content"] || null
+    const type = USER_REPORT
+
+    if (!user_id || ! text_content) {
+        res.status(400).json("Missing required fields!")
+    }
+
+    const params = [user_id, text_content, reported_user_id, type]
+    const qs = `INSERT INTO reports (user_id, text_content, target_id, type) VALUES ($1, $2, $3, $4)`
+    try {
+        let data = await query(qs, params)
+        data = data.rowCount
+        addReportsOnUser(reported_user_id, 1)
+        res.json(`Created ${data} new reports under user with id ${user_id} on user ${reported_user_id}`)
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+
+})
+
+// create a new report on a post
+app.post('/posts/:id/reports', authenticateToken, authorizeUser("REPORT", actionList["WRITE"]), async (req, res) => {
+    const body = req.body;
+    const user_id = req.user_id || null; const post_id = req.params.id
+    const text_content = body["text_content"] || null
+    const type = POST_REPORT
+
+    if (!user_id || ! text_content) {
+        res.status(400).json("Missing required fields!")
+    }
+
+    const params = [user_id, text_content, post_id, type]
+    const qs = `INSERT INTO reports (user_id, text_content, target_id, type) VALUES ($1, $2, $3, $4)`
+    try {
+        let data = await query(qs, params)
+        data = data.rowCount
+        addReportsOnPost(post_id, 1)
+        res.json(`Created ${data} new reports under user with id ${user_id} on post ${post_id}`)
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+
+})
+
+// create a new report on a comment
+app.post('/comments/:id/reports', authenticateToken, authorizeUser("REPORT", actionList["WRITE"]), async (req, res) => {
+    const body = req.body;
+    const user_id = req.user_id || null; const comment_id = req.params.id
+    const text_content = body["text_content"] || null
+    const type = COMMENT_REPORT
+
+    if (!user_id || ! text_content) {
+        res.status(400).json("Missing required fields!")
+    }
+
+    const params = [user_id, text_content, comment_id, type]
+    const qs = `INSERT INTO reports (user_id, text_content, target_id, type) VALUES ($1, $2, $3, $4)`
+    try {
+        let data = await query(qs, params)
+        data = data.rowCount
+        addReportsOnComment(comment_id, 1)
+        res.json(`Created ${data} new reports under user with id ${user_id} on comment ${comment_id}`)
+    } catch (error) {
+        res.status(400).json(error.message)
+    }
+
+})
+
 /** PUT ROUTES */
 
 // update a user
-app.put('/users/:id', (req, res) => {
+app.put('/users/:id', authenticateToken, authorizeUser("USER", actionList["UPDATE"]), (req, res) => {
     const body = req.body
     const id = req.params.id
 
@@ -239,9 +427,10 @@ app.put('/users/:id', (req, res) => {
 })
 
 // edit an existing post. Note that you can only change the title and text content through this method. Anything else requires admin console or alternative command
-app.put('/posts/:id', (req, res) => {
+app.put('/posts/:id', authenticateToken, authorizeUser("POST", actionList["UPDATE"]), (req, res) => {
     const body = req.body
     const id = req.params.id
+    const user_id = req.user_id
 
     const text_content = body["text_content"] || null
     const title = body["title"] || null
@@ -257,10 +446,11 @@ app.put('/posts/:id', (req, res) => {
 })
 
 // edit an existing comment
-app.put('/posts/:post_id/comments/:comment_id', (req, res) => {
+app.put('/posts/:post_id/comments/:comment_id', authenticateToken, authorizeUser("COMMENT", actionList["UPDATE"]), (req, res) => {
     const body = req.body
     const post_id = req.params.post_id
     const comment_id = req.params.comment_id
+    const user_id = req.user_id
     
     const text_content = body["text_content"] || null
 
@@ -276,8 +466,9 @@ app.put('/posts/:post_id/comments/:comment_id', (req, res) => {
 /** DELETE ROUTES */
 
 // delete a user
-app.delete('/users/:id', (req, res) => {
+app.delete('/users/:id', authenticateToken, authorizeUser("USER", actionList["UPDATE"]), (req, res) => {
     const id = req.params.id
+    const user_id = req.user_id
     
     const qs = `DELETE from Users where id=$1`
     const params = [id]
@@ -289,8 +480,9 @@ app.delete('/users/:id', (req, res) => {
 })
 
 // delete a post
-app.delete('/posts/:id', (req, res) => {
+app.delete('/posts/:id', authenticateToken, authorizeUser("POST", actionList["UPDATE"]), (req, res) => {
     const id = req.params.id
+    const user_id = req.user_id
     
     const qs = `DELETE from Posts WHERE id=$1`
     const params = [id]
@@ -302,7 +494,7 @@ app.delete('/posts/:id', (req, res) => {
 })
 
 // delete a comment
-app.delete('/comments/:id', (req, res) => {
+app.delete('/comments/:id', authenticateToken, authorizeUser("COMMENT", actionList["UPDATE"]), (req, res) => {
     const id = req.params.id
 
     const qs = `DELETE FROM comments WHERE id=$1`
@@ -315,8 +507,9 @@ app.delete('/comments/:id', (req, res) => {
 })
 
 // delete a comment with a specific post id and comment id (kind of unnecessary but it is consistent with how comments are obtained.. so)
-app.delete('/posts/:post_id/comments/:comment_id', (req, res) => {
-    const post_id = req.params.post_id; const comment_id = req.params.comment_id
+app.delete('/posts/:post_id/comments/:id', authenticateToken, authorizeUser("COMMENT", actionList["UPDATE"]), (req, res) => {
+    const post_id = req.params.post_id; const comment_id = req.params.id
+    const user_id = req.user_id
 
     const qs = `DELETE FROM comments WHERE id=$1 AND post_id=$2`
     const params = [comment_id, post_id]
@@ -337,10 +530,10 @@ app.delete('/posts/:post_id/comments/:comment_id', (req, res) => {
  * User has liked post previously, clicks button again -> removes user like
  * User has disliked post previously, clicks like button -> removes user dislike, adds user like
  */
-app.put('/posts/:post_id/like', async (req, res) => {
+app.put('/posts/:post_id/like', authenticateToken, async (req, res) => {
     const body = req.body
 
-    const user_id = body["user_id"]
+    const user_id = req.user_id
     const post_id = req.params.post_id;
 
     const initial_query = `SELECT * FROM post_likes WHERE user_id=$1 AND post_id=$2`
@@ -382,10 +575,10 @@ app.put('/posts/:post_id/like', async (req, res) => {
  * User has disliked post previously, clicks button again -> removes user dislike
  * User has disliked post previously, clicks like button -> removes user dislike, adds user like
  */
-app.put('/posts/:post_id/dislike', async (req, res) => {
+app.put('/posts/:post_id/dislike', authenticateToken, async (req, res) => {
     const body = req.body
 
-    const user_id = body["user_id"]
+    const user_id = req.user_id
     const post_id = req.params.post_id;
 
     const initial_query = `SELECT * FROM post_likes WHERE user_id=$1 AND post_id=$2`
@@ -427,11 +620,10 @@ app.put('/posts/:post_id/dislike', async (req, res) => {
  * User has liked comment previously, clicks button again -> removes user like
  * User has disliked comment previously, clicks like button -> removes user dislike, adds user like
  */
-app.put('/posts/:post_id/comments/:comment_id/like', async (req, res) => {
+app.put('/posts/:post_id/comments/:comment_id/like', authenticateToken, async (req, res) => {
     const body = req.body
 
-    const user_id = body["user_id"]
-    const post_id = req.params.post_id;
+    const user_id = req.user_id
     const comment_id = req.params.comment_id;
 
     const initial_query = `SELECT * FROM comment_likes WHERE user_id=$1 AND comment_id=$2`
@@ -473,11 +665,10 @@ app.put('/posts/:post_id/comments/:comment_id/like', async (req, res) => {
  * User has disliked comment previously, clicks button again -> removes user dislike
  * User has liked comment previously, clicks like button -> removes user like, adds user dislike
  */
-app.put('/posts/:post_id/comments/:comment_id/dislike', async (req, res) => {
+app.put('/posts/:post_id/comments/:comment_id/dislike', authenticateToken, async (req, res) => {
     const body = req.body
 
-    const user_id = body["user_id"]
-    const post_id = req.params.post_id;
+    const user_id = req.user_id
     const comment_id = req.params.comment_id;
 
     const initial_query = `SELECT * FROM comment_likes WHERE user_id=$1 AND comment_id=$2`
@@ -530,6 +721,33 @@ async function addLikesOnPost(post_id, num) {
 /** Helper function to adjust the number of total likes and dislikes (as a score) a comment has */
 async function addLikesOnComment(comment_id, num) {
     const qs = `UPDATE comments SET likes = likes + ${num} WHERE id=$1`
+    const params = [comment_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to add a report to a user */
+async function addReportsOnUser(user_id, num) {
+    const qs = `UPDATE users SET reports = reports + ${num} WHERE id=$1`
+    const params = [user_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to add a report to a post */
+async function addReportsOnPost(post_id, num) {
+    const qs = `UPDATE posts SET reports = reports + ${num} WHERE id=$1`
+    const params = [post_id]
+
+    await query(qs, params)
+    return
+}
+
+/** Helper function to add a report to a comment */
+async function addReportsOnComment(comment_id, num) {
+    const qs = `UPDATE comments SET reports = reports + ${num} WHERE id=$1`
     const params = [comment_id]
 
     await query(qs, params)

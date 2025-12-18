@@ -9,10 +9,41 @@ Attachments (photos) are not given when searching by post. This is because they 
 That separate table has all attachments inside of it, and you can obtain all attachments for a certain post using a specific route.
 When you obtain attachments that way, they will be sorted by which one was created first. You may want to use this to your advantage somehow, not sure.
 
+# Packages Used:
+* postgres / pg
+* dotenv
+* cors
+* nodemon
+**New Libraries**
+* @google-cloud/storage (for... cloud storage..)
+* multer (middleware for cloud storage)
+* bcrypt (so that we don't store *unhashed* passwords in our database...)
+* node-cache
+* jsonwebtoken
+
+### ALL OF THESE ROUTES EXCEPT FOR LOGIN / LOGOUT / CREATE USER REQUIRE AUTHORIZATION HEADER!
+**HEADER FORMAT:**
+authorization: "Bearer [TOKEN]"
+
 # Routes
+## ACCESS ROUTES
+### /login
+Attempts to login a user and add them to the session. Requires matching username and password
+*Example JSON*
+{
+    'username':'some_username'
+    'password':'some_password'
+}
+
+### /logout
+Attempts to logout a user with the token provided in the authorization header
+
 ## GET ROUTES
 ### /users
 Returns all users in the database, except users whose IDs are negative (test and admin accounts)
+
+### /users/me
+Returns the user that is _currently logged in_, so requires authentication.
 
 ### /users/:id
 Returns the user with the id given, or an error
@@ -25,6 +56,9 @@ Returns all posts a user has made
 
 ### /posts
 Returns all posts
+
+### /posts/:id
+Returns the post with the specified id, and all of it's comments
 
 ### /recent-posts/:num
 Returns the 'num' most recent posts
@@ -41,7 +75,7 @@ Returns all comments on the specified post
 
 ## POST ROUTES
 ### /users
-Adds a user to the database and returns the user created and a little message
+Adds a user to the database and returns the user created and a message with user id. The user will have to login after maing their account.
 *EXAMPLE JSON:*
 `{
     "username":"creative_username",
@@ -51,7 +85,7 @@ Adds a user to the database and returns the user created and a little message
     "role":0, //MUST BE -1, 0, 1 OR 2
     "display_name":"optionally something different",
     "biography":"optional biography",
-    "reports":0 //I would recommend not setting this since it is how many reports a user has recieved
+    "password":"somethingSecure"
 }`
 
 *EXAMPLE RESPONSE:*
@@ -62,18 +96,18 @@ Adds a user to the database and returns the user created and a little message
 
 ### /posts
 Adds a post to the database. Only works if a valid user id is given
-*EXAMPLE JSON*
-`{
-    "user_id":-1, 
-    "title":"A cool post made by an admin",
-    "text_content":"Some cool text content"
-}`
+*MULTIPART FORMAT*
+**Format: Key -> Pair**
+image -> (file)
+text_content -> something witty
+title -> fun title
+
+
 
 ### /posts/:post_id/comments
 Adds a comment to the database under the post with id = post_id. Both the user id given in the body and the post id given in the request must be valid.
 *EXAMPLE JSON*
 `{
-    "user_id":-1,
     "text_content":"A cool comment made by an admin"
 }`
 
@@ -136,6 +170,20 @@ Attempts to dislike post. Has same logic as above. Also requires a json body as 
 ### /posts/:post_id/comment/:comment_id/like || dislike
 Functions same as above, but for comments!
 
+## REPORT ROUTES (all POST)
+### /posts/:post_id/reports
+Attempts to add a report to a post. Requires the user_id (until OAUTH is added) and a text_body.
+*EXAMPLE JSON BODY:*
+{
+    "text_content":"This post is stupid!"
+}
+
+### /users/:user_id/reports
+Attempts to add a report to a user. Same as above
+
+### /comments/:comment_id/reports
+Attempts to add a report to a comment. Same as above
+
 
 
 ## Tables
@@ -149,7 +197,7 @@ reports (# of times user has been reported)
 
 ### Posts
 Fields:
-id, user_id,
+id, user_id, username
 title, text_content,
 likes,
 reports (# of times post has been reported)
@@ -161,16 +209,10 @@ value (1 or -1)
 
 ### Comments
 Fields:
-id, user_id, post_id,
+id, user_id, post_id, username
 created_at,
 text_content,
 reports (# of times comment has been reported)
-
-### Attachments
-Fields:
-id, user_id, post_id,
-created_at,
-attachment_link
 
 ### Reports
 Fields:
