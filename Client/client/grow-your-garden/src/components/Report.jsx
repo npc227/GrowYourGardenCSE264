@@ -13,30 +13,33 @@ const style = {
   p: 4,
 }
 
-//allows for the creation of account by inputting relevant info
-export default function Login({ReportOpen, setLoginOpen, setLI}) {
+//allows for the reporting of account by inputting relevant info
+export default function Report({ReportOpen, setReportOpen}) {
 
   //set up usestates for important values
   const [un, setUN] = useState()
-  const [pw, setPW] = useState()
+  const [tc, setTC] = useState()
 
   /*boolean value to see if input is valid. if invalid, display msg to user.*/
   const [undefMsg, setUndefMsg] = useState(false)
   const [message, setMessage] = useState()
 
-  //Create a new user / add to database
-  const loginAttempt = () => {
+  //Create a new report attempt
+  const reportAttempt = () => {
 
-    //account info
-    const loginInfo = {
+    //remove quotation marks from key
+    let tempKey = "Bearer " + (localStorage.getItem("key").replaceAll('"', ""))
+
+    //report info
+    const reportInfo = {
       username: un,
-      password: pw
+      text_content: tc
     }
 
     //if statement to check if any elements are undefined
     //if one is found to be undefined, toggles conditional rendering msg to prompt them to fill all fields.
     //gives specific message to missing infp
-    if (un == undefined || pw == undefined) {
+    if (un == undefined || tc == undefined) {
 
       /*If form is not full on click, inform user, then return so they can't submit undefined info.*/
       console.log("One or more fields is undefined. Please fill out all fields.")
@@ -49,32 +52,31 @@ export default function Login({ReportOpen, setLoginOpen, setLI}) {
 
     }
 
-    //api call to log in
-    fetch('http://localhost:3000/login', {
+    //api call to report
+    fetch('http://localhost:3000/users/reports', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'authorization': tempKey,
       },
-      body: JSON.stringify(loginInfo)
+      body: JSON.stringify(reportInfo)
     })
     .then(response => {
       if(!response.ok) { 
+        setMessage("Please double check that the user is valid.")
+        setUndefMsg(true)
         throw new Error(`HTTP error! status: ${response.status}`)
+
       }
       return response.text()
     })
     .then(responseData => {
 
-      //pass username and user's auth token to the browser's local storage
-      localStorage.setItem("key", responseData)
-      localStorage.setItem("user", loginInfo.username)
-      setLI(true)
-
       //need to set values undefined after app is added, or else they carry over
       setUN(undefined)
-      setPW(undefined)
+      setTC(undefined)
       setUndefMsg(false)
-      setLoginOpen(false)
+      setReportOpen(false)
 
     })
   }
@@ -83,15 +85,15 @@ export default function Login({ReportOpen, setLoginOpen, setLI}) {
     //setting values undefined so that they don't carry over to next input
     //(which was previously a problem with the input validation)
     setUN(undefined)
-    setPW(undefined)
+    setTC(undefined)
     setUndefMsg(false)
-    setLoginOpen(false)
+    setReportOpen(false)
   }
 
   return (
- <Modal open={LoginOpen} onClose={handleModalClose}>
+ <Modal open={ReportOpen} onClose={handleModalClose}>
       <Box sx={style}>
-        <h3>Enter Login Credentials:</h3>
+        <h3>Enter Report Info:</h3>
 
         {/*Use conditional rendering to display error msg if input is undefined*/}
         <h2>
@@ -103,10 +105,10 @@ export default function Login({ReportOpen, setLoginOpen, setLI}) {
 
         {/*input user/pass*/}
         <Stack spacing={2}>
-            <TextField  required label="Username" onChange={event => setUN(event.target.value)} />
-            <TextField required label="Password" onChange={event => setPW(event.target.value)}/>
+            <TextField  required label="Offender's Username" onChange={event => setUN(event.target.value)} />
+            <TextField required label="Describe Issue" onChange={event => setTC(event.target.value)}/>
             </Stack>
-        <Button onClick={loginAttempt}>Log In</Button>
+        <Button onClick={reportAttempt}>Report</Button>
         <Button onClick={handleModalClose}>Close</Button>
       </Box>
     </Modal>
