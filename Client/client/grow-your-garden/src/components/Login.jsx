@@ -13,16 +13,11 @@ const style = {
   p: 4,
 }
 
-//allows for the creation of account by inputting relevabt info
-export default function MakeAcc({MakeAccOpen, setMakeAccOpen}) {
+//allows for the creation of account by inputting relevant info
+export default function Login({LoginOpen, setLoginOpen}) {
 
   //set up usestates for important values
   const [un, setUN] = useState()
-  const [fn, setFN] = useState()
-  const [ln, setLN] = useState()
-  const [ea, setEA] = useState()
-  const [dn, setDN] = useState()
-  const [bo, setBO] = useState()
   const [pw, setPW] = useState()
 
   /*boolean value to see if input is valid. if invalid, display msg to user.*/
@@ -30,24 +25,18 @@ export default function MakeAcc({MakeAccOpen, setMakeAccOpen}) {
   const [message, setMessage] = useState()
 
   //Create a new user / add to database
-  const addUser = () => {
+  const loginAttempt = () => {
 
     //account info
-    const newAcc = {
+    const loginInfo = {
       username: un,
-      first_name: fn,
-      last_name: ln,
-      email: ea,
-      role: 1,
-      display_name: dn,
-      biography: bo,
       password: pw
     }
 
     //if statement to check if any elements are undefined
     //if one is found to be undefined, toggles conditional rendering msg to prompt them to fill all fields.
     //gives specific message to missing infp
-    if (un == undefined || fn == undefined || ln == undefined || ea == undefined || dn == undefined || pw == undefined) {
+    if (un == undefined || pw == undefined) {
 
       /*If form is not full on click, inform user, then return so they can't submit undefined info.*/
       console.log("One or more fields is undefined. Please fill out all fields.")
@@ -60,37 +49,31 @@ export default function MakeAcc({MakeAccOpen, setMakeAccOpen}) {
 
     }
 
-    //api call to add new user's info to database
-    fetch('http://localhost:3000/users', {
+    //api call to log in
+    fetch('http://localhost:3000/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(newAcc)
+      body: JSON.stringify(loginInfo)
     })
     .then(response => {
       if(!response.ok) { 
-
-        //set error message to display that the username/email are already in use, tell user to try again
-        setMessage("This Username and / or Email Address are in use. Please try again.")
-        setUndefMsg(true)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       return response.text()
     })
     .then(responseData => {
-      console.log(responseData)
+
+      //pass username and user's auth token to the browser's local storage
+      localStorage.setItem("key", responseData)
+      localStorage.setItem("user", loginInfo.username)
 
       //need to set values undefined after app is added, or else they carry over
       setUN(undefined)
-      setFN(undefined)
-      setLN(undefined)
-      setEA(undefined)
-      setDN(undefined)
-      setBO(undefined)
       setPW(undefined)
       setUndefMsg(false)
-      handleModalClose()
+      setLoginOpen(false)
 
     })
   }
@@ -99,23 +82,17 @@ export default function MakeAcc({MakeAccOpen, setMakeAccOpen}) {
     //setting values undefined so that they don't carry over to next input
     //(which was previously a problem with the input validation)
     setUN(undefined)
-    setFN(undefined)
-    setLN(undefined)
-    setEA(undefined)
-    setDN(undefined)
-    setBO(undefined)
     setPW(undefined)
     setUndefMsg(false)
-    setMakeAccOpen(false)
+    setLoginOpen(false)
   }
 
   return (
- <Modal open={MakeAccOpen} onClose={handleModalClose}>
+ <Modal open={LoginOpen} onClose={handleModalClose}>
       <Box sx={style}>
-        <h3>Enter New Account Details:</h3>
+        <h3>Enter Login Credentials:</h3>
 
-        {/*Use conditional rendering to display error msg if input is undefined
-        also display this if error was returned (aka: api notices email or user are not unique)*/}
+        {/*Use conditional rendering to display error msg if input is undefined*/}
         <h2>
           {undefMsg 
             ? message
@@ -123,17 +100,12 @@ export default function MakeAcc({MakeAccOpen, setMakeAccOpen}) {
           }
         </h2>
 
-        {/*input account info to make a new acc*/}
+        {/*input user/pass*/}
         <Stack spacing={2}>
             <TextField  required label="Username" onChange={event => setUN(event.target.value)} />
-            <TextField required label="First Name" onChange={event => setFN(event.target.value)}/>
-            <TextField required label="Last Name" onChange={event => setLN(event.target.value)}/>
-            <TextField required label="Email Address" onChange={event => setEA(event.target.value)}/>
-            <TextField required label="Display Name" onChange={event => setDN(event.target.value)}/>
-            <TextField required label="Bio (Optional)" onChange={event => setBO(event.target.value)}/>
             <TextField required label="Password" onChange={event => setPW(event.target.value)}/>
             </Stack>
-        <Button onClick={addUser}>Create User</Button>
+        <Button onClick={loginAttempt}>Log In</Button>
         <Button onClick={handleModalClose}>Close</Button>
       </Box>
     </Modal>

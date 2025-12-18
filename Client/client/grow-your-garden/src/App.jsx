@@ -12,6 +12,7 @@ import './components/NavBar.css'
 //note: postModal adapted from my job application tracjer project
 import PostModal from './components/PostModal'
 import MakeAcc from './components/MakeAcc'
+import Login from './components/Login'
 
 //import test images from tempimages
 import TI1 from './assets/tempart/snake.jpg'
@@ -30,11 +31,14 @@ function App() {
   //const [count, setCount] = useState(0)
 
   //attempt to get posts, usestate for posts
-  //also: usestate for post modal, setting selected post
+  //also: usestate for post modal, setting selected post, getting auth key
+  //tracking logged in
   const [posts, setPosts] = useState([])
   const [PostModalOpen, setPostModalOpen] = useState(false)
   const [MakeAccOpen, setMakeAccOpen] = useState(false)
   const [selectedPost, setSelPost] = useState()
+  const [LoginOpen, setLoginOpen] = useState()
+  const [loggedIn, setLI] = useState(false)
 
   //keep track of loading
   const [loading, setLoading] = useState(true)
@@ -123,9 +127,53 @@ function App() {
         {/*logo*/}
         <img src={logoImg} class={'logo'}></img>
 
-        {/*temp placeholders -- replace with modals for login/profile*/}
+        {/*On click, open up login (if not logged in) or profile (if logged in)*/}
         <div class={'links'}>
-            <h3>Log In / Out</h3>
+            <h3 onClick={ () => {
+
+              if (loggedIn === false) {
+
+                console.log("logging in")
+                setLI(true)
+                setLoginOpen(true)
+
+              } else {
+
+                console.log("logging out")
+
+                //set logged in to false to display correct text
+                setLI(false)
+
+                //format the auth
+                let key = "BEARER " + (localStorage.getItem("key"))
+                
+                //api call to log out
+                fetch('http://localhost:3000/logout', {
+                  method: 'POST',
+                  headers: {
+                    'authorization': key
+                  },
+                })
+                .then(response => {
+                  if(!response.ok) { 
+                    throw new Error(`HTTP error! status: ${response.status}`)
+                  }
+                  return response.text()
+                })
+                .then(response => {
+                  console.log(response)
+
+                })
+
+              }
+
+              {/*Conditional rendering: if logged in,
+                show Log Out, otherwise, show Log In*/}
+            }}>{loggedIn 
+                ? "Log Out"
+                : "Log In"
+              }</h3>
+        
             <h3 /*onClick={ () =>{
               setSelProf(selProf)
               setProfModalOpen(true)
@@ -216,6 +264,8 @@ function App() {
       <PostModal PostModalOpen={PostModalOpen} setPostModalOpen={setPostModalOpen} post={selectedPost}
       /> 
       <MakeAcc MakeAccOpen={MakeAccOpen} setMakeAccOpen={setMakeAccOpen}
+      />
+      <Login LoginOpen={LoginOpen} setLoginOpen={setLoginOpen}
       />
 
     </>
