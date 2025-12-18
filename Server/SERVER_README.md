@@ -42,6 +42,9 @@ Attempts to logout a user with the token provided in the authorization header
 ### /users
 Returns all users in the database, except users whose IDs are negative (test and admin accounts)
 
+### /users/me
+Returns the user that is _currently logged in_, so requires authentication.
+
 ### /users/:id
 Returns the user with the id given, or an error
 

@@ -65,6 +65,16 @@ app.get('/users/query', (req, res) => {
     }
 })
 
+app.get('/users/me', authenticateToken, async (req, res) => {
+   const qs = `SELECT * FROM users WHERE id=$1`
+   const params = [req.user_id]
+   try {
+        query(qs, params).then(data => {data = data.rows[0]; const {hashed_password, ...r_user} = data; res.json(r_user)})
+   } catch (error) {
+        res.status(400).json(error.message)
+   }
+})
+
 // get user with specified id (including test and admin accounts if requested)
 app.get('/users/:id', (req, res) => {
     const qs = `SELECT * FROM Users WHERE id=$1`
