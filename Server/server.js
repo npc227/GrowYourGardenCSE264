@@ -236,7 +236,8 @@ app.post('/users', async (req, res) => {
                 values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
     try {
-        query(qs, params).then(data => {res.json({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})})
+       let data = await query(qs, params)
+       res.json({user_id:data.rows[0].id, body:`Created user with id: ${data.rows[0].id}`})
     } catch (error) {
         res.status(400).json(error.message)
     }
@@ -306,7 +307,7 @@ app.post('/posts/:post_id/comments', authenticateToken, authorizeUser("COMMENT",
     const qs = `INSERT INTO comments (user_id, username, post_id, text_content, reports, likes) VALUES ($1, $2, $3, $4, $5, $6)`
 
     try {
-        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new comments under user ${body.user_id}`)})
+        query(qs, params).then(data => {res.json(`Created ${data.rowCount} new comments under user ${req.user_id}`)})
     } catch (error) {
         res.status(400).json(error.message)
     }
