@@ -246,6 +246,7 @@ function App() {
         {/*Posts displayed in a grid: currently, 2x2. Responsiveness, change to 1x4 stack upon window shrink*/}
         <div class={'postGrid'}>
           <img src={posts[0].image} onClick={ () => {
+            console.log(posts[0])
             setSelPost(posts[0])
             setPostModalOpen(true)
           }

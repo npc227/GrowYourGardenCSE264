@@ -36,12 +36,6 @@ export default function MakePost({MakePostOpen, setMakePostOpen, getPosts}) {
   //Create / add a new post to database
   const addPost = () => {
 
-    //account info
-    const newPost = {
-      title: title,
-      text_content: text_content
-    }
-
     //if statement to check if any elements are undefined
     //if one is found to be undefined, toggles conditional rendering msg to prompt them to fill all fields.
     if (title == undefined || text_content == undefined) {
@@ -71,13 +65,12 @@ export default function MakePost({MakePostOpen, setMakePostOpen, getPosts}) {
       //remove quotation marks from key
       tempKey = "Bearer " + (localStorage.getItem("key").replaceAll('"', ""))
       postData.append("image", imgFile)
-      let postBody = JSON.stringify(newPost)
 
       //seperate title and text content, not combine to body
       //i know this because i tried adding the whole newPost as "body"
       //but server alr interprets all text content as body so that is not needed
-      postData.append("title", postBody.title)
-      postData.append("text_content", postBody.text_content)
+      postData.append("title", title)
+      postData.append("text_content", text_content)
 
     }
 
